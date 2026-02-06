@@ -1,0 +1,38 @@
+MONSTER
+	name 'human'
+	hp 10
+	atk 1d3
+
+MONSTER
+	name 'goblin'
+	hp 10
+	atk 1d5
+
+MONSTER
+	name 'skeleton'
+	hp 10
+	atk 1d2
+	skill undead
+
+ITEM
+	name 'sword'
+	melee
+	atk 1d6
+
+ITEM
+	name 'armor'
+	armor
+	def 5
+
+ITEM
+	name 'health potion'
+	heals
+	consumable
+
+TEMPLATE
+	race 'human'
+
+	item 'health potion'
+		count 2 to 5
+	end
+	item 'sword' end
