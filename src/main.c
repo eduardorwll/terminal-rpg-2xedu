@@ -7,7 +7,9 @@
 #define S8 string8FromCstr
 
 typedef unsigned int uint;
+typedef unsigned char uchar;
 
+typedef struct Arena Arena;
 typedef struct String8 String8;
 typedef struct Tokenizer Tokenizer;
 typedef struct Token Token;
@@ -25,6 +27,13 @@ typedef enum
 	TokenType_Integer,
 	TokenType_Dice
 } TokenType;
+
+struct Arena
+{
+	uchar *memory;
+	uint capacity;
+	uint top;
+};
 
 struct String8
 {
@@ -52,6 +61,8 @@ struct Tokenizer
 
 	bool hasToken;
 	Token token;
+
+	Arena *arena;
 };
 
 struct ItemType
@@ -84,18 +95,14 @@ struct GameData
 	ItemType *itemTypeHead;
 };
 
-String8 string8FromCstr(char *str) {
-	String8 s8 = {0};
-	s8.len = strlen(str);
-	s8.buf = str;
-	return s8;
-}
-
+String8 string8FromCstr(char *str);
+bool string8Eq(String8 a, String8 b);
+void *arenaPush(Arena *arena, uint len, uint alignment);
 int readWholeFile(char *filepath, String8 *str);
 int readWholeFile(char *filepath, String8 *str);
 int writeToFile(String8 str, char *filepath);
 void tokenPrint(Token *token);
-Tokenizer tokenizerMake(String8 str);
+Tokenizer tokenizerMake(String8 str, Arena *arena);
 bool charIsWhitespace(char c);
 bool charIsDigit(char c);
 bool charIsAlpha(char c);
@@ -103,11 +110,56 @@ int tokenizerSkipWhitespace(Tokenizer *tokenizer);
 int tokenizerTryParseInteger(Tokenizer *tokenizer, Token *token);
 int tokenizerTryParseIdent(Tokenizer *tokenizer, Token *token);
 int tokenizerTryParseString(Tokenizer *tokenizer, Token *token);
+int tokenizerAdvanceToken(Tokenizer *tokenizer);
 int tokenizerPopToken(Tokenizer *tokenizer, Token *token);
+int tokenizerPeekToken(Tokenizer *tokenizer, Token *token);
 bool tokenIsIdent(Token *token, String8 str);
 bool tokenizerPopIdent(Tokenizer *tokenizer, Token *token);
 bool tokenizerPopInteger(Tokenizer *tokenizer, int *integer);
 int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt);
+
+String8 string8FromCstr(char *str) {
+	String8 s8 = {0};
+	s8.len = strlen(str);
+	s8.buf = str;
+	return s8;
+}
+
+bool string8Eq(String8 a, String8 b)
+{
+	uint i = 0;
+
+	if (a.len != b.len) {
+		return 0;
+	}
+
+	for (i = 0; i < a.len; i++) {
+		if (a.buf[i] != b.buf[i]) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+void *arenaPush(Arena *arena, uint len, uint alignment)
+{
+	uint padding = -arena->top % alignment;
+	void *ptr = NULL;
+
+	assert(padding <= alignment);
+	assert(arena->top + padding + len < arena->capacity);
+
+	if (padding == alignment) {
+		padding = 0;
+	}
+
+	arena->top += padding;
+	ptr = &arena->memory[arena->top];
+	arena->top += len;
+
+	return ptr;
+}
 
 int readWholeFile(char *filepath, String8 *str)
 {
@@ -190,10 +242,11 @@ void tokenPrint(Token *token)
 	}
 }
 
-Tokenizer tokenizerMake(String8 str)
+Tokenizer tokenizerMake(String8 str, Arena *arena)
 {
 	Tokenizer tokenizer = {0};
 	tokenizer.str = str;
+	tokenizer.arena = arena;
 	return tokenizer;
 }
 
@@ -298,13 +351,13 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 	bool escape = false;
 	bool foundString = false;
 	bool isSingleQuotes = false;
-
 	char *buffer = NULL;
-	uint bufferCapacity = 32;
 	uint bufferLen = 0;
-	buffer = malloc(bufferCapacity);
+
+	buffer = arenaPush(tokenizer->arena, 0, 1);
+
 	if (buffer == NULL) {
-		fprintf(stderr, "malloc error\n");
+		fprintf(stderr, "out of memory error\n");
 		abort();
 	}
 
@@ -314,15 +367,6 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 		}
 
 		c = tokenizer->str.buf[tokenizer->index];
-
-		if (bufferLen + 1 >= bufferCapacity) {
-			bufferCapacity *= 2;
-			buffer = realloc(buffer, bufferCapacity);
-			if (buffer == NULL) {
-				fprintf(stderr, "malloc error\n");
-				abort();
-			}
-		}
 
 		if (!foundString) {
 			if (c == '"') {
@@ -336,6 +380,10 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 			}
 		} else {
 			if (escape) {
+				if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
+					fprintf(stderr, "out of memory error\n");
+					abort();
+				}
 				switch (c) {
 					case 'n': {
 						buffer[bufferLen++] = '\n';
@@ -352,6 +400,9 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 					case '\'': {
 						buffer[bufferLen++] = '\'';
 					} break;
+					default: {
+						buffer[bufferLen++] = c;
+					} break;
 				}
 			} else {
 				if (!isSingleQuotes && c == '"') {
@@ -363,6 +414,11 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 				} else if (c == '\\') {
 					escape = true;
 				} else {
+					if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
+						fprintf(stderr, "out of memory error\n");
+						abort();
+					}
+
 					buffer[bufferLen++] = c;
 				}
 			}
@@ -487,8 +543,14 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 int main()
 {
 	uint i = 0;
-	Tokenizer tokenizer = tokenizerMake(S8("these are 3 some 'lol string' tokens"));
+	Arena arena = {0};
+	Tokenizer tokenizer = {0};
 	Token token = {0};
+
+	arena.capacity = 1024 * 4;  /* 4kb should be enough for everyone ;) */
+	arena.memory = malloc(arena.capacity);
+
+	tokenizer = tokenizerMake(S8("these are 3 some 'lol string' tokens"), &arena);
 
 	while (tokenizerPopToken(&tokenizer, &token) == 0) {
 		tokenPrint(&token);
