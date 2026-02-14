@@ -1,23 +1,23 @@
 MONSTER
 	name 'human'
 	hp 10
-	atk 1d3
+	atk 3
 
-MONSTER
-	name 'goblin'
-	hp 10
-	atk 1d5
+#MONSTER
+#	name 'goblin'
+#	hp 10
+#	atk 5
 
-MONSTER
-	name 'skeleton'
-	hp 10
-	atk 1d2
-	skill undead
+#MONSTER
+#	name 'skeleton'
+#	hp 10
+#	atk 2
+#	skill undead
 
 #ITEM
 #	name 'sword'
 #	melee
-#	atk 1d6
+#	atk 6
 
 #ITEM
 #	name 'armor'

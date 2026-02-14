@@ -12,6 +12,8 @@ struct Arena
 	uint top;
 };
 
+void arenaMalloc(Arena *arena, uint capacity);
+void arenaFree(Arena *arena);
 void *arenaPush(Arena *arena, uint len, uint alignment);
 
 #endif /* !defined(ARENA_H) */

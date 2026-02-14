@@ -1,7 +1,19 @@
 #include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "arena.h"
+
+void arenaMalloc(Arena *arena, uint capacity)
+{
+	arena->memory = malloc(capacity);
+	assert(arena->memory != NULL);
+}
+
+void arenaFree(Arena *arena)
+{
+	free(arena->memory);
+}
 
 void *arenaPush(Arena *arena, uint len, uint alignment)
 {

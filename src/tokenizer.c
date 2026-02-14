@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef int (*tokenizer_Try)(Tokenizer *tokenizer, Token *token);
 
@@ -35,7 +36,7 @@ void token_print(Token *token)
 		} break;
 		default: {
 			printf("UNRECOGNIZED TOKEN\n");
-			abort();
+			assert(0);
 		};
 	}
 }
@@ -71,14 +72,14 @@ static int tokenizer_skipWhitespace(Tokenizer *tokenizer)
 
 	for (;;) {
 		if (tokenizer->index >= tokenizer->str.len) {
-			return 1;
+			return 0;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
 		if (!inComment) {
 			if (c == '#') {
 				inComment = true;
 			} else if (!charIsWhitespace(c)) {
-				return 0;
+				return 1;
 			}
 		} else {
 			if (c == '\n') {
@@ -162,7 +163,7 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 
 	if (buffer == NULL) {
 		fprintf(stderr, "out of memory error\n");
-		abort();
+		assert(0);
 	}
 
 	for (;;) {
@@ -186,7 +187,7 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 			if (escape) {
 				if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
 					fprintf(stderr, "out of memory error\n");
-					abort();
+					assert(0);
 				}
 				switch (c) {
 					case 'n': {
@@ -220,7 +221,7 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 				} else {
 					if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
 						fprintf(stderr, "out of memory error\n");
-						abort();
+						assert(0);
 					}
 
 					buffer[bufferLen++] = c;
@@ -232,7 +233,7 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 	}
 	if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
 		fprintf(stderr, "out of memory error\n");
-		abort();
+		assert(0);
 	}
 	buffer[bufferLen] = '\0';
 
@@ -252,13 +253,13 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 int tokenizer_advanceToken(Tokenizer *tokenizer)
 {
 	assert(tokenizer->hasToken);
-	tokenizer->hasToken = true;
+	tokenizer->hasToken = false;
 	return 1;
 }
 
 int tokenizer_popToken(Tokenizer *tokenizer, Token *token)
 {
-	uint err = 0;
+	uint success = 0;
 	uint index = 0;
 	uint oldTokenizerIndex = 0;
 	tokenizer_Try tryFuncs[] = {
@@ -270,25 +271,25 @@ int tokenizer_popToken(Tokenizer *tokenizer, Token *token)
 	if (tokenizer->hasToken) {
 		*token = tokenizer->token;
 		tokenizer->hasToken = false;
-		return 0;
+		return 1;
 	}
 
-	err = tokenizer_skipWhitespace(tokenizer);
-	if (err) {
-		return err;
+	success = tokenizer_skipWhitespace(tokenizer);
+	if (!success) {
+		return 0;
 	}
 
 	if (tokenizer->index <= tokenizer->str.len) {
 		for (index = 0; index < sizeof(tryFuncs) / sizeof(*tryFuncs); index++) {
 			oldTokenizerIndex = tokenizer->index;
 			if (tryFuncs[index](tokenizer, token) == 1) {
-				return 0;
+				return 1;
 			}
 			tokenizer->index = oldTokenizerIndex;
 		}
 	}
 
-	return 1;
+	return 0;
 }
 
 int tokenizer_peekToken(Tokenizer *tokenizer, Token *token)
@@ -350,7 +351,7 @@ bool tokenizer_peekIdent(Tokenizer *tokenizer, Token *token)
 bool tokenizer_popInteger(Tokenizer *tokenizer, int *integer) {
 	Token token = {0};
 	tokenizer_popToken(tokenizer, &token);
-	if (token.type != TokenType_Ident) {
+	if (token.type != TokenType_Integer) {
 		return false;
 	}
 	*integer = token.data.integer;
@@ -377,9 +378,7 @@ int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *inte
 
 	if (token_isIdent(&token, fieldName)) {
 		tokenizer_advanceToken(tokenizer);
-		if (!tokenizer_popInteger(tokenizer, integer)) {
-			abort();
-		}
+		assert(tokenizer_popInteger(tokenizer, integer));
 		return 1;
 	}
 
@@ -396,9 +395,7 @@ int tokenizer_getIdentField(Tokenizer *tokenizer, String8 fieldName, String8 *id
 
 	if (token_isIdent(&token, fieldName)) {
 		tokenizer_advanceToken(tokenizer);
-		if (!tokenizer_popIdent(tokenizer, &identToken)) {
-			abort();
-		}
+		assert(tokenizer_popIdent(tokenizer, &identToken));
 		*ident = identToken.data.str;
 
 		return 1;
@@ -414,7 +411,11 @@ bool tokenizer_popString(Tokenizer *tokenizer, String8 *string)
 	if (token.type != TokenType_String) {
 		return false;
 	}
-	*string = token.data.str;
+
+	string->len = token.data.str.len;
+	string->buf = arenaPush(tokenizer->arena, token.data.str.len, 1);
+	memcpy(string->buf, token.data.str.buf, token.data.str.len);
+
 	return true;
 }
 
@@ -422,18 +423,15 @@ bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldName, String8 *
 {
 	Token token = {0};
 	if (!tokenizer_peekIdent(tokenizer, &token)) {
-		return 0;
+		return false;
 	}
 
 	if (token_isIdent(&token, fieldName)) {
 		tokenizer_advanceToken(tokenizer);
+		assert(tokenizer_popString(tokenizer, str));
 
-		if (!tokenizer_popString(tokenizer, str)) {
-			abort();
-		}
-
-		return 1;
+		return true;
 	}
 
-	return 0;
+	return false;
 }
