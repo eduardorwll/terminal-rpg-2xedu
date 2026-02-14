@@ -9,11 +9,19 @@
 #define MAX_ENEMIES 6
 
 typedef struct ItemType ItemType;
-typedef struct Item Item;
 typedef struct MonsterType MonsterType;
-typedef struct Monster Monster;
 typedef struct GameData GameData;
+
+/* live data */
+typedef struct Item Item;
+typedef struct Monster Monster;
 typedef struct Game Game;
+
+typedef enum
+{
+	GameMode_Menu,
+	GameMode_Battle
+} GameMode;
 
 struct ItemType
 {
@@ -28,12 +36,6 @@ struct ItemType
 	ItemType *next;
 };
 
-struct Item
-{
-	ItemType type;
-	Item *next;
-};
-
 struct MonsterType
 {
 	String8 name;
@@ -42,6 +44,18 @@ struct MonsterType
 
 	uint isUndead : 1;
 	MonsterType *next;
+};
+
+struct GameData
+{
+	MonsterType *monsterTypesHead;
+	ItemType *itemTypesHead;
+};
+
+struct Item
+{
+	ItemType type;
+	Item *next;
 };
 
 struct Monster
@@ -57,18 +71,6 @@ struct Monster
 
 	uint undeadResurrectTimer;
 };
-
-struct GameData
-{
-	MonsterType *monsterTypesHead;
-	ItemType *itemTypesHead;
-};
-
-typedef enum
-{
-	GameMode_Menu,
-	GameMode_Battle
-} GameMode;
 
 struct Game
 {
