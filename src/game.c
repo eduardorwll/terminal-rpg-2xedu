@@ -14,7 +14,7 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 			break;
 		}
 
-		if      (tokenizer_getIntegerField(tokenizer, S8("str"), &mt->str)) {}
+		if (tokenizer_getIntegerField(tokenizer, S8("str"), &mt->str)) {}
 		else if (tokenizer_getIntegerField(tokenizer, S8("dex"), &mt->dex)) {}
 		else if (tokenizer_getIntegerField(tokenizer, S8("vit"), &mt->vit)) {}
 		else if (tokenizer_getIntegerField(tokenizer, S8("res"), &mt->res)) {}
@@ -34,7 +34,7 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 int tryParseItemType(Tokenizer *tokenizer, ItemType *it)
 {
 	for (;;) {
-		if      (tokenizer_getIntegerField(tokenizer, S8("defense"), &it->defense)) {
+		if (tokenizer_getIntegerField(tokenizer, S8("defense"), &it->defense)) {
 			it->isArmor = true;
 		} else if (tokenizer_getDiceField(tokenizer, S8("damage"), &it->damage)) {
 			it->isWeapon = true;
@@ -144,7 +144,12 @@ void printGameData(GameData *gamedata)
 			itemType->name.buf
 		);
 		if (itemType->isWeapon) {
-			printf("    damage: %dd%d+%d\n", itemType->damage.amount, itemType->damage.sides, itemType->damage.add);
+			printf(
+				"    damage: %dd%d+%d\n",
+				itemType->damage.amount,
+				itemType->damage.sides,
+				itemType->damage.add
+			);
 		}
 		if (itemType->isArmor) {
 			printf("    defense: %d\n", itemType->defense);
@@ -152,7 +157,12 @@ void printGameData(GameData *gamedata)
 		if (itemType->isConsumable) {
 			printf("    doesRegen: %s\n", itemType->doesRegen ? "true" : "false");
 			printf("    doesPoison: %s\n", itemType->doesPoison ? "true" : "false");
-			printf("    hp: %dd%d+%d\n", itemType->hp.amount, itemType->hp.sides, itemType->hp.add);
+			printf(
+				"    hp: %dd%d+%d\n",
+				itemType->hp.amount,
+				itemType->hp.sides,
+				itemType->hp.add
+			);
 		}
 		itemType = itemType->next;
 	}
