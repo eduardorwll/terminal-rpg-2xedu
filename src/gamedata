@@ -14,25 +14,25 @@ MONSTER
 	atk 1d2
 	skill undead
 
-ITEM
-	name 'sword'
-	melee
-	atk 1d6
+#ITEM
+#	name 'sword'
+#	melee
+#	atk 1d6
 
-ITEM
-	name 'armor'
-	armor
-	def 5
+#ITEM
+#	name 'armor'
+#	armor
+#	def 5
 
-ITEM
-	name 'health potion'
-	heals
-	consumable
+#ITEM
+#	name 'health potion'
+#	hp 10
+#	consumable
 
-TEMPLATE
-	race 'human'
-
-	item 'health potion'
-		count 2 to 5
-	end
-	item 'sword' end
+# TEMPLATE
+# 	race 'human'
+# 
+# 	item 'health potion'
+# 		count 2 to 5
+# 	end
+# 	item 'sword' end

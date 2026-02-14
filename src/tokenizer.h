@@ -39,23 +39,23 @@ struct Tokenizer
 	Arena *arena;
 };
 
-void tokenPrint(Token *token);
-Tokenizer tokenizerMake(String8 str, Arena *arena);
-/*bool charIsWhitespace(char c);*/
-/*bool charIsDigit(char c);*/
-/*bool charIsAlpha(char c);*/
-/*int tokenizerSkipWhitespace(Tokenizer *tokenizer);*/
-/*int tokenizerTryParseInteger(Tokenizer *tokenizer, Token *token);*/
-/*int tokenizerTryParseIdent(Tokenizer *tokenizer, Token *token);*/
-/*int tokenizerTryParseString(Tokenizer *tokenizer, Token *token);*/
-int tokenizerAdvanceToken(Tokenizer *tokenizer);
-int tokenizerPopToken(Tokenizer *tokenizer, Token *token);
-int tokenizerPeekToken(Tokenizer *tokenizer, Token *token);
-bool tokenIsIdent(Token *token, String8 str);
-bool tokenizerPopIdent(Tokenizer *tokenizer, Token *token);
-bool tokenizerPeekIdent(Tokenizer *tokenizer, Token *token);
-bool tokenizerPopInteger(Tokenizer *tokenizer, int *integer);
-int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *integer);
+void token_print(Token *token);
+Tokenizer tokenizer_make(String8 str, Arena *arena);
+
+int tokenizer_advanceToken(Tokenizer *tokenizer);
+int tokenizer_popToken(Tokenizer *tokenizer, Token *token);
+int tokenizer_peekToken(Tokenizer *tokenizer, Token *token);
+
+bool token_isIdent(Token *token, String8 str);
+
+bool tokenizer_popIdent(Tokenizer *tokenizer, Token *token);
+bool tokenizer_peekIdent(Tokenizer *tokenizer, Token *token);
 int tokenizer_getIdentField(Tokenizer *tokenizer, String8 fieldName, String8 *ident);
+bool tokenizer_expectIdent(Tokenizer *tokenizer, String8 identStr);
+
+bool tokenizer_popInteger(Tokenizer *tokenizer, int *integer);
+int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *integer);
+
+bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldname, String8 *str);
 
 #endif /* !defined(TOKENIZER_H) */

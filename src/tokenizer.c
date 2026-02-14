@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef int (*tokenizer_Try)(Tokenizer *tokenizer, Token *token);
+
 /* @todo this is for debugging, remove later */
-void tokenPrint(Token *token)
+void token_print(Token *token)
 {
 	switch (token->type) {
 		case TokenType_Ident: {
@@ -38,7 +40,7 @@ void tokenPrint(Token *token)
 	}
 }
 
-Tokenizer tokenizerMake(String8 str, Arena *arena)
+Tokenizer tokenizer_make(String8 str, Arena *arena)
 {
 	Tokenizer tokenizer = {0};
 	tokenizer.str = str;
@@ -46,42 +48,48 @@ Tokenizer tokenizerMake(String8 str, Arena *arena)
 	return tokenizer;
 }
 
-bool charIsWhitespace(char c)
+static bool charIsWhitespace(char c)
 {
 	return c == ' ' || c == '\t' || c == '\n';
 }
 
-bool charIsDigit(char c)
+static bool charIsDigit(char c)
 {
 	return '0' <= c && c <= '9';
 }
 
-bool charIsAlpha(char c)
+static bool charIsAlpha(char c)
 {
 	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
 
-int tokenizerSkipWhitespace(Tokenizer *tokenizer)
+static int tokenizer_skipWhitespace(Tokenizer *tokenizer)
 {
+	/* skipWhitespace also skips comments */
 	char c = 0;
+	bool inComment = false;
 
 	for (;;) {
 		if (tokenizer->index >= tokenizer->str.len) {
 			return 1;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
-		if (charIsWhitespace(c)) {
-			tokenizer->index += 1;
+		if (!inComment) {
+			if (c == '#') {
+				inComment = true;
+			} else if (!charIsWhitespace(c)) {
+				return 0;
+			}
 		} else {
-			tokenizer->index = tokenizer->index;
-			return 0;
+			if (c == '\n') {
+				inComment = false;
+			}
 		}
+		tokenizer->index += 1;
 	}
 }
 
-typedef int (*TokenizerTry)(Tokenizer *tokenizer, Token *token);
-
-int tokenizerTryParseInteger(Tokenizer *tokenizer, Token *token)
+static int tokenizer_tryParseInteger(Tokenizer *tokenizer, Token *token)
 {
 	char c = 0;
 	uint integer = 0;
@@ -111,7 +119,7 @@ int tokenizerTryParseInteger(Tokenizer *tokenizer, Token *token)
 	}
 }
 
-int tokenizerTryParseIdent(Tokenizer *tokenizer, Token *token)
+static int tokenizer_tryParseIdent(Tokenizer *tokenizer, Token *token)
 {
 	char c = 0;
 	uint len = 0;
@@ -141,7 +149,7 @@ int tokenizerTryParseIdent(Tokenizer *tokenizer, Token *token)
 	}
 }
 
-int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
+static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 {
 	char c = 0;
 	bool escape = false;
@@ -241,22 +249,22 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 	return 1;
 }
 
-int tokenizerAdvanceToken(Tokenizer *tokenizer)
+int tokenizer_advanceToken(Tokenizer *tokenizer)
 {
 	assert(tokenizer->hasToken);
 	tokenizer->hasToken = true;
 	return 1;
 }
 
-int tokenizerPopToken(Tokenizer *tokenizer, Token *token)
+int tokenizer_popToken(Tokenizer *tokenizer, Token *token)
 {
 	uint err = 0;
 	uint index = 0;
 	uint oldTokenizerIndex = 0;
-	TokenizerTry tryFuncs[] = {
-		tokenizerTryParseIdent,
-		tokenizerTryParseString,
-		tokenizerTryParseInteger
+	tokenizer_Try tryFuncs[] = {
+		tokenizer_tryParseIdent,
+		tokenizer_tryParseString,
+		tokenizer_tryParseInteger
 	};
 
 	if (tokenizer->hasToken) {
@@ -265,23 +273,25 @@ int tokenizerPopToken(Tokenizer *tokenizer, Token *token)
 		return 0;
 	}
 
-	err = tokenizerSkipWhitespace(tokenizer);
+	err = tokenizer_skipWhitespace(tokenizer);
 	if (err) {
 		return err;
 	}
 
-	for (index = 0; index < sizeof(tryFuncs) / sizeof(*tryFuncs); index++) {
-		oldTokenizerIndex = tokenizer->index;
-		if (tryFuncs[index](tokenizer, token) == 1) {
-			return 0;
+	if (tokenizer->index <= tokenizer->str.len) {
+		for (index = 0; index < sizeof(tryFuncs) / sizeof(*tryFuncs); index++) {
+			oldTokenizerIndex = tokenizer->index;
+			if (tryFuncs[index](tokenizer, token) == 1) {
+				return 0;
+			}
+			tokenizer->index = oldTokenizerIndex;
 		}
-		tokenizer->index = oldTokenizerIndex;
 	}
 
 	return 1;
 }
 
-int tokenizerPeekToken(Tokenizer *tokenizer, Token *token)
+int tokenizer_peekToken(Tokenizer *tokenizer, Token *token)
 {
 	int success = 0;
 
@@ -289,7 +299,7 @@ int tokenizerPeekToken(Tokenizer *tokenizer, Token *token)
 		*token = tokenizer->token;
 		return 1;
 	} else {
-		success = tokenizerPopToken(tokenizer, token);
+		success = tokenizer_popToken(tokenizer, token);
 		if (success) {
 			tokenizer->hasToken = true;
 			tokenizer->token = *token;
@@ -298,7 +308,7 @@ int tokenizerPeekToken(Tokenizer *tokenizer, Token *token)
 	}
 }
 
-bool tokenIsIdent(Token *token, String8 str)
+bool token_isIdent(Token *token, String8 str)
 {
 	uint i = 0;
 
@@ -319,27 +329,27 @@ bool tokenIsIdent(Token *token, String8 str)
 	return true;
 }
 
-bool tokenizerPopIdent(Tokenizer *tokenizer, Token *token)
+bool tokenizer_popIdent(Tokenizer *tokenizer, Token *token)
 {
-	tokenizerPopToken(tokenizer, token);
+	tokenizer_popToken(tokenizer, token);
 	if (token->type != TokenType_Ident) {
 		return false;
 	}
 	return true;
 }
 
-bool tokenizerPeekIdent(Tokenizer *tokenizer, Token *token)
+bool tokenizer_peekIdent(Tokenizer *tokenizer, Token *token)
 {
-	tokenizerPeekToken(tokenizer, token);
+	tokenizer_peekToken(tokenizer, token);
 	if (token->type != TokenType_Ident) {
 		return false;
 	}
 	return true;
 }
 
-bool tokenizerPopInteger(Tokenizer *tokenizer, int *integer) {
+bool tokenizer_popInteger(Tokenizer *tokenizer, int *integer) {
 	Token token = {0};
-	tokenizerPopToken(tokenizer, &token);
+	tokenizer_popToken(tokenizer, &token);
 	if (token.type != TokenType_Ident) {
 		return false;
 	}
@@ -347,16 +357,27 @@ bool tokenizerPopInteger(Tokenizer *tokenizer, int *integer) {
 	return true;
 }
 
+bool tokenizer_expectIdent(Tokenizer *tokenizer, String8 identStr)
+{
+	Token token = {0};
+	tokenizer_peekToken(tokenizer, &token);
+	if (token.type == TokenType_Ident && string8Eq(identStr, token.data.str)) {
+		tokenizer_advanceToken(tokenizer);
+		return true;
+	}
+	return false;
+}
+
 int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *integer)
 {
 	Token token = {0};
-	if (!tokenizerPeekIdent(tokenizer, &token)) {
+	if (!tokenizer_peekIdent(tokenizer, &token)) {
 		return 0;
 	}
 
-	if (tokenIsIdent(&token, fieldName)) {
-		tokenizerAdvanceToken(tokenizer);
-		if (!tokenizerPopInteger(tokenizer, integer)) {
+	if (token_isIdent(&token, fieldName)) {
+		tokenizer_advanceToken(tokenizer);
+		if (!tokenizer_popInteger(tokenizer, integer)) {
 			abort();
 		}
 		return 1;
@@ -369,13 +390,13 @@ int tokenizer_getIdentField(Tokenizer *tokenizer, String8 fieldName, String8 *id
 {
 	Token token = {0};
 	Token identToken = {0};
-	if (!tokenizerPeekIdent(tokenizer, &token)) {
+	if (!tokenizer_peekIdent(tokenizer, &token)) {
 		return 0;
 	}
 
-	if (tokenIsIdent(&token, fieldName)) {
-		tokenizerAdvanceToken(tokenizer);
-		if (!tokenizerPopIdent(tokenizer, &identToken)) {
+	if (token_isIdent(&token, fieldName)) {
+		tokenizer_advanceToken(tokenizer);
+		if (!tokenizer_popIdent(tokenizer, &identToken)) {
 			abort();
 		}
 		*ident = identToken.data.str;
@@ -386,3 +407,33 @@ int tokenizer_getIdentField(Tokenizer *tokenizer, String8 fieldName, String8 *id
 	return 0;
 }
 
+bool tokenizer_popString(Tokenizer *tokenizer, String8 *string)
+{
+	Token token = {0};
+	tokenizer_popToken(tokenizer, &token);
+	if (token.type != TokenType_String) {
+		return false;
+	}
+	*string = token.data.str;
+	return true;
+}
+
+bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldName, String8 *str)
+{
+	Token token = {0};
+	if (!tokenizer_peekIdent(tokenizer, &token)) {
+		return 0;
+	}
+
+	if (token_isIdent(&token, fieldName)) {
+		tokenizer_advanceToken(tokenizer);
+
+		if (!tokenizer_popString(tokenizer, str)) {
+			abort();
+		}
+
+		return 1;
+	}
+
+	return 0;
+}
