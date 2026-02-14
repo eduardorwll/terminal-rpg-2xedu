@@ -80,6 +80,9 @@ struct MonsterType
 {
 	String8 name;
 	int maxHp;
+	int atk;
+
+	uint isUndead : 1;
 
 	MonsterType *next;
 };
@@ -426,17 +429,29 @@ int tokenizerTryParseString(Tokenizer *tokenizer, Token *token)
 
 		tokenizer->index += 1;
 	}
-
-	token->type = TokenType_String;
-	token->data.str.buf = malloc(bufferLen);
-	if (token->data.str.buf == NULL) {
-		fprintf(stderr, "malloc error\n");
+	if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
+		fprintf(stderr, "out of memory error\n");
 		abort();
 	}
-	token->data.str.len = bufferLen;
-	memcpy(token->data.str.buf, buffer, bufferLen);
-	free(buffer);
+	buffer[bufferLen] = '\0';
 
+	assert(
+		(char *)&tokenizer->arena->memory[tokenizer->arena->top - bufferLen - 1]
+		==
+		buffer
+	);
+
+	token->type = TokenType_String;
+	token->data.str.buf = buffer;
+	token->data.str.len = bufferLen;
+
+	return 1;
+}
+
+int tokenizerAdvanceToken(Tokenizer *tokenizer)
+{
+	assert(tokenizer->hasToken);
+	tokenizer->hasToken = true;
 	return 1;
 }
 
@@ -473,6 +488,23 @@ int tokenizerPopToken(Tokenizer *tokenizer, Token *token)
 	return 1;
 }
 
+int tokenizerPeekToken(Tokenizer *tokenizer, Token *token)
+{
+	int success = 0;
+
+	if (tokenizer->hasToken) {
+		*token = tokenizer->token;
+		return 1;
+	} else {
+		success = tokenizerPopToken(tokenizer, token);
+		if (success) {
+			tokenizer->hasToken = true;
+			tokenizer->token = *token;
+		}
+		return success;
+	}
+}
+
 bool tokenIsIdent(Token *token, String8 str) {
 	uint i = 0;
 
@@ -501,6 +533,14 @@ bool tokenizerPopIdent(Tokenizer *tokenizer, Token *token) {
 	return true;
 }
 
+bool tokenizerPeekIdent(Tokenizer *tokenizer, Token *token) {
+	tokenizerPeekToken(tokenizer, token);
+	if (token->type != TokenType_Ident) {
+		return false;
+	}
+	return true;
+}
+
 bool tokenizerPopInteger(Tokenizer *tokenizer, int *integer) {
 	Token token = {0};
 	tokenizerPopToken(tokenizer, &token);
@@ -511,29 +551,68 @@ bool tokenizerPopInteger(Tokenizer *tokenizer, int *integer) {
 	return true;
 }
 
+int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *integer)
+{
+	Token token = {0};
+	if (!tokenizerPeekIdent(tokenizer, &token)) {
+		return 0;
+	}
+
+	if (tokenIsIdent(&token, fieldName)) {
+		tokenizerAdvanceToken(tokenizer);
+		if (!tokenizerPopInteger(tokenizer, integer)) {
+			abort();
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+int tokenizer_getIdentField(Tokenizer *tokenizer, String8 fieldName, String8 *ident)
+{
+	Token token = {0};
+	Token identToken = {0};
+	if (!tokenizerPeekIdent(tokenizer, &token)) {
+		return 0;
+	}
+
+	if (tokenIsIdent(&token, fieldName)) {
+		tokenizerAdvanceToken(tokenizer);
+		if (!tokenizerPopIdent(tokenizer, &identToken)) {
+			abort();
+		}
+		*ident = identToken.data.str;
+
+		return 1;
+	}
+
+	return 0;
+}
+
 int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 {
 	Token token = {0};
-	int integer = 0;
+	String8 skillStr = {0};
 
-	if (!tokenizerPopIdent(tokenizer, &token)) {
+	if (!tokenizerPeekIdent(tokenizer, &token)) {
 		return 0;
 	}
 
 	if (!tokenIsIdent(&token, S8("MONSTER"))) {
 		return 0;
 	}
+	tokenizerAdvanceToken(tokenizer);
 
 	for (;;) {
-		if (!tokenizerPopIdent(tokenizer, &token)) {
-			return 1;
-		}
-
-		if (tokenIsIdent(&token, S8("maxhp"))) {
-			if (tokenizerPopInteger(tokenizer, &integer)) {abort();}
-			mt->maxHp = integer;
+		if (tokenizer_getIntegerField(tokenizer, S8("hp"), &mt->maxHp)) {}
+		if (tokenizer_getIntegerField(tokenizer, S8("atk"), &mt->atk)) {}
+		if (tokenizer_getIdentField(tokenizer, S8("skill"), &skillStr)) {
+			if (string8Eq(skillStr, S8("undead"))) {
+				mt->isUndead = true;
+			}
 		} else {
-			return 1;
+			break;
 		}
 	}
 
