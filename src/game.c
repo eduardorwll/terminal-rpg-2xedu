@@ -14,8 +14,10 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 			break;
 		}
 
-		if (tokenizer_getIntegerField(tokenizer, S8("hp"), &mt->maxHp)) {}
-		else if (tokenizer_getIntegerField(tokenizer, S8("atk"), &mt->atk)) {}
+		if      (tokenizer_getIntegerField(tokenizer, S8("str"), &mt->str)) {}
+		else if (tokenizer_getIntegerField(tokenizer, S8("dex"), &mt->dex)) {}
+		else if (tokenizer_getIntegerField(tokenizer, S8("vit"), &mt->vit)) {}
+		else if (tokenizer_getIntegerField(tokenizer, S8("res"), &mt->res)) {}
 		else if (tokenizer_getIdentField(tokenizer, S8("skill"), &str)) {
 			if (string8Eq(str, S8("undead"))) {
 				mt->isUndead = true;
@@ -32,15 +34,20 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 int tryParseItemType(Tokenizer *tokenizer, ItemType *it)
 {
 	for (;;) {
-		if      (tokenizer_getIntegerField(tokenizer, S8("hp"),  &it->hp)) {}
-		else if (tokenizer_getIntegerField(tokenizer, S8("atk"), &it->atk)) {}
-		else if (tokenizer_expectIdent(tokenizer, S8("regen"))) {
+		if      (tokenizer_getIntegerField(tokenizer, S8("defense"), &it->defense)) {
+			it->isArmor = true;
+		} else if (tokenizer_getDiceField(tokenizer, S8("damage"), &it->damage)) {
+			it->isWeapon = true;
+		} else if (tokenizer_getDiceField(tokenizer, S8("hp"), &it->hp)) {
+			it->isConsumable = true;
+		} else if (tokenizer_expectIdent(tokenizer, S8("regen"))) {
+			it->isConsumable = true;
 			it->doesRegen = true;
 		} else if (tokenizer_expectIdent(tokenizer, S8("poison"))) {
+			it->isConsumable = true;
 			it->doesPoison = true;
-		} else {
-			break;
-		}
+		} else if (tokenizer_getStringField(tokenizer, S8("name"), &it->name)) {}
+		else {break;}
 	}
 
 	return 1;
@@ -109,6 +116,8 @@ void parseGameData(Game *game)
 void printGameData(GameData *gamedata)
 {
 	MonsterType *monsterType = gamedata->monsterTypesHead;
+	ItemType *itemType = gamedata->itemTypesHead;
+
 	while (monsterType != NULL) {
 		printf("MONSTER\n");
 		printf(
@@ -116,17 +125,35 @@ void printGameData(GameData *gamedata)
 			monsterType->name.len,
 			monsterType->name.buf
 		);
-		printf(
-			"    maxhp: %d\n",
-			monsterType->maxHp);
-		printf(
-			"    atk: %d\n",
-			monsterType->atk
-		);
+		printf("    str: %d\n", monsterType->str);
+		printf("    dex: %d\n", monsterType->dex);
+		printf("    vit: %d\n", monsterType->vit);
+		printf("    res: %d\n", monsterType->res);
 		printf(
 			"    isUndead: %s\n",
 			monsterType->isUndead ? "true" : "false"
 		);
 		monsterType = monsterType->next;
+	}
+
+	while (itemType != NULL) {
+		printf("ITEM\n");
+		printf(
+			"    name: %.*s\n",
+			itemType->name.len,
+			itemType->name.buf
+		);
+		if (itemType->isWeapon) {
+			printf("    damage: %dd%d+%d\n", itemType->damage.amount, itemType->damage.sides, itemType->damage.add);
+		}
+		if (itemType->isArmor) {
+			printf("    defense: %d\n", itemType->defense);
+		}
+		if (itemType->isConsumable) {
+			printf("    doesRegen: %s\n", itemType->doesRegen ? "true" : "false");
+			printf("    doesPoison: %s\n", itemType->doesPoison ? "true" : "false");
+			printf("    hp: %dd%d+%d\n", itemType->hp.amount, itemType->hp.sides, itemType->hp.add);
+		}
+		itemType = itemType->next;
 	}
 }

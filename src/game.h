@@ -27,11 +27,16 @@ struct ItemType
 {
 	String8 name;
 
+	bool isConsumable;
+	bool isWeapon;
+	bool isArmor;
+
 	bool doesRegen;
 	bool doesPoison;
 
-	int hp;
-	int atk;
+	Dice hp;
+	Dice damage;
+	int defense;
 
 	ItemType *next;
 };
@@ -39,8 +44,10 @@ struct ItemType
 struct MonsterType
 {
 	String8 name;
-	int maxHp;
-	int atk;
+	int str;
+	int dex;
+	int vit;
+	int res;
 
 	uint isUndead : 1;
 	MonsterType *next;

@@ -10,14 +10,6 @@
 #include "util.h"
 #include "game.h"
 
-typedef struct Dice Dice;
-struct Dice
-{
-	int add;
-	int amount;
-	int sides;
-};
-
 int main()
 {
 	Game game = {0};

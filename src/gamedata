@@ -1,12 +1,31 @@
 MONSTER
-	name 'human'
-	hp 10
-	atk 3
+	name 'humano'
+	str 5    dex 10   vit 5    res 5
 
-#MONSTER
-#	name 'goblin'
-#	hp 10
-#	atk 5
+MONSTER
+	name 'elfo'
+	str 5    dex 12   vit 10   res 5
+
+MONSTER
+	name 'duende'
+	str 5    dex 5    vit 10   res 5
+
+MONSTER
+	name 'orc'
+	str 10   dex 5    vit 10   res 10
+
+MONSTER
+	name 'esqueleto'
+	str 3    dex 3    vit 3    res 3
+	skill undead
+
+ITEM
+	name 'espada barata'
+	damage 1d6
+
+ITEM
+	name 'armadura de couro'
+	defense 5
 
 #MONSTER
 #	name 'skeleton'

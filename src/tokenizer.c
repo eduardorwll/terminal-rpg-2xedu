@@ -34,6 +34,14 @@ void token_print(Token *token)
 				token->data.integer
 			);
 		} break;
+		case TokenType_Dice: {
+			printf(
+				"DICE %dd%d+%d\n",
+				token->data.dice.amount,
+				token->data.dice.sides,
+				token->data.dice.add
+			);
+		} break;
 		default: {
 			printf("UNRECOGNIZED TOKEN\n");
 			assert(0);
@@ -118,6 +126,77 @@ static int tokenizer_tryParseInteger(Tokenizer *tokenizer, Token *token)
 	} else {
 		return 0;
 	}
+}
+
+static int tokenizer_tryParseDice(Tokenizer *tokenizer, Token *token)
+{
+	char c = 0;
+	uint amount = 0;
+	uint sides = 0;
+	uint add = 0;
+	bool foundOneDigit = false;
+
+	for (;;) {
+		if (tokenizer->index >= tokenizer->str.len) {
+			return 0;
+		}
+		c = tokenizer->str.buf[tokenizer->index];
+		if (charIsDigit(c)) {
+			foundOneDigit = true;
+			amount = amount * 10 + c - '0';
+			tokenizer->index += 1;
+		} else {
+			if (foundOneDigit) {
+				break;
+			} else {
+				return 0;
+			}
+		}
+	}
+
+	if (c != 'd') {
+		return 0;
+	}
+	tokenizer->index += 1;
+
+	for (;;) {
+		if (tokenizer->index >= tokenizer->str.len) {
+			break;
+		}
+		c = tokenizer->str.buf[tokenizer->index];
+		if (charIsDigit(c)) {
+			sides = sides * 10 + c - '0';
+			tokenizer->index += 1;
+		} else {
+			break;
+		}
+	}
+
+	if (c == '+') {
+		tokenizer->index += 1;
+		for (;;) {
+			if (tokenizer->index >= tokenizer->str.len) {
+				break;
+			}
+			c = tokenizer->str.buf[tokenizer->index];
+			if (charIsDigit(c)) {
+				add = add * 10 + c - '0';
+				tokenizer->index += 1;
+			} else {
+				break;
+			}
+		}
+	}
+
+	token->type = TokenType_Dice;
+	token->data.dice.amount = amount;
+	token->data.dice.sides = sides;
+	token->data.dice.add = add;
+
+	printf("hi\n");
+	token_print(token);
+
+	return 1;
 }
 
 static int tokenizer_tryParseIdent(Tokenizer *tokenizer, Token *token)
@@ -263,6 +342,7 @@ int tokenizer_popToken(Tokenizer *tokenizer, Token *token)
 	uint index = 0;
 	uint oldTokenizerIndex = 0;
 	tokenizer_Try tryFuncs[] = {
+		tokenizer_tryParseDice,
 		tokenizer_tryParseIdent,
 		tokenizer_tryParseString,
 		tokenizer_tryParseInteger
@@ -434,4 +514,30 @@ bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldName, String8 *
 	}
 
 	return false;
+}
+
+bool tokenizer_popDice(Tokenizer *tokenizer, Dice *dice) {
+	Token token = {0};
+	tokenizer_popToken(tokenizer, &token);
+	if (token.type != TokenType_Dice) {
+		return false;
+	}
+	*dice = token.data.dice;
+	return true;
+}
+
+int tokenizer_getDiceField(Tokenizer *tokenizer, String8 fieldName, Dice *dice)
+{
+	Token token = {0};
+	if (!tokenizer_peekIdent(tokenizer, &token)) {
+		return 0;
+	}
+
+	if (token_isIdent(&token, fieldName)) {
+		tokenizer_advanceToken(tokenizer);
+		assert(tokenizer_popDice(tokenizer, dice));
+		return 1;
+	}
+
+	return 0;
 }

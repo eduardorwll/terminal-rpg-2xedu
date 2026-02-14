@@ -7,6 +7,14 @@
 typedef struct Tokenizer Tokenizer;
 typedef struct Token Token;
 
+typedef struct Dice Dice;
+struct Dice
+{
+	int add;
+	int amount;
+	int sides;
+};
+
 typedef enum 
 {
 	TokenType_Ident,
@@ -20,11 +28,8 @@ struct Token
 	TokenType type;
 	union {
 		int integer;
-		struct {
-			int amount;
-			int sides;
-		} dice;
 		String8 str;
+		Dice dice;
 	} data;
 };
 
@@ -56,6 +61,10 @@ bool tokenizer_expectIdent(Tokenizer *tokenizer, String8 identStr);
 bool tokenizer_popInteger(Tokenizer *tokenizer, int *integer);
 int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *integer);
 
+bool tokenizer_popString(Tokenizer *tokenizer, String8 *str);
 bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldname, String8 *str);
+
+bool tokenizer_popDice(Tokenizer *tokenizer, Dice *dice);
+int tokenizer_getDiceField(Tokenizer *tokenizer, String8 fieldName, Dice *dice);
 
 #endif /* !defined(TOKENIZER_H) */
