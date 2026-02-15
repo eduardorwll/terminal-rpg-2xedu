@@ -19,17 +19,32 @@ MONSTER
 	str 3    dex 3    vit 3    res 3
 	skill undead
 
-ITEM
-	name 'pocao de cura'
-	hp 1d5+3
+MONSTER
+	name 'slime'
+	str 2    dex 2    vit 8    res 2
 
-ITEM
-	name 'espada barata'
-	damage 1d6
+MONSTER
+	name 'ciclope'
+	str 20    dex 10    vit 20    res 20
 
-ITEM
-	name 'armadura de couro'
-	defense 5
+# potions
+ITEM name 'pocao de cura maior'   hp 1d6+6
+ITEM name 'pocao de cura menor'   hp 1d3+3
+ITEM name 'pocao de regeneracao'  regen
+ITEM name 'pocao de veneno'       poison
+
+# weapons
+ITEM name 'espada barata'         damage 1d6
+ITEM name 'espada de ferro'       damage 2d4
+ITEM name 'espada de titanio'     damage 4d4
+ITEM name 'espada de adamantio'   damage 4d4+3
+
+# armor
+ITEM name 'armadura de couro'     defense 5
+ITEM name 'armadura de ferro'     defense 10
+ITEM name 'armadura de mitril'    defense 15
+ITEM name 'armadura de adamantio' defense 20
+
 
 TEMPLATE
 	monster 'humano'
@@ -38,6 +53,35 @@ TEMPLATE
 	weapon 'espada barata'
 	armor 'armadura de couro'
 
-	item 'pocao de cura'
-	item 'pocao de cura'
-	item 'pocao de cura'
+	item 'pocao de cura menor'
+	item 'pocao de cura menor'
+	item 'pocao de cura menor'
+
+#PLACE
+#	name 'floresta'
+#	difficulty 1 # difficulty ranges from 1 to 10
+#	enemy 'duende'  10
+#	enemy 'elfo'    10
+#	enemy 'ciclope' 1
+#
+#PLACE
+#	name 'pantano'
+#	difficulty 5
+#	enemy 'elfo'    10
+#	enemy 'orc'     20
+#	enemy 'ciclope' 1
+#
+#PLACE
+#	name 'dungeon'
+#	difficulty 6
+#	enemy 'esqueleto' 4
+#	enemy 'slime'     4
+#
+#PLACE
+#	name 'labirinto'
+#	difficulty 8
+#
+#PLACE
+#	name 'profudezas'
+#	difficulty 10
+	

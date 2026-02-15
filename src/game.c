@@ -75,7 +75,6 @@ int tryParseTemplate(Tokenizer *tokenizer, Game *game, GameData *gamedata, Monst
 		} else if (tokenizer_getStringField(tokenizer, S8("item"), &str)) {
 			itemType = gamedata->itemTypesHead;
 			for (;;) {
-				printf("finding %.*s\n", str.len, str.buf);
 				assert(itemType != NULL);
 				if (string8Eq(itemType->name, str)) {
 					item = template->inventory;
