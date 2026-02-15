@@ -21,6 +21,13 @@ typedef struct Game Game;
 
 typedef enum
 {
+	PlaceEntryType_Gold,
+	PlaceEntryType_Monster,
+	PlaceEntryType_Item
+} PlaceEntryType;
+
+typedef enum
+{
 	GameMode_Menu,
 	GameMode_Battle
 } GameMode;
@@ -58,6 +65,8 @@ struct MonsterType
 struct PlaceEntry
 {
 	int chance;
+
+	PlaceEntryType type;
 	union {
 		ItemType *itemType;
 		MonsterType *monsterType;
