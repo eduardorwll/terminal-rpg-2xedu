@@ -10,6 +10,8 @@
 
 typedef struct ItemType ItemType;
 typedef struct MonsterType MonsterType;
+typedef struct Place Place;
+typedef struct PlaceEntry PlaceEntry;
 typedef struct GameData GameData;
 
 /* live data */
@@ -53,6 +55,25 @@ struct MonsterType
 	MonsterType *next;
 };
 
+struct PlaceEntry
+{
+	int chance;
+	union {
+		ItemType *itemType;
+		MonsterType *monsterType;
+		int gold;
+	}
+};
+
+struct Place
+{
+	String8 name;
+	int chanceTotal;
+
+	PlaceEntry *entries;
+	uint entriesLen;
+};
+
 struct GameData
 {
 	MonsterType *monsterTypesHead;
@@ -73,6 +94,7 @@ struct Monster
 	int hp;
 	int regenTimer;
 	int poisonTimer;
+	int gold;
 
 	Item weapon;
 	Item armor;

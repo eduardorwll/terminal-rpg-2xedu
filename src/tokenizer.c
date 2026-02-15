@@ -233,8 +233,8 @@ static int tokenizer_tryParseDice(Tokenizer *tokenizer, Token *token)
 
 	token->type = TokenType_Dice;
 	token->data.dice.amount = amount;
-	token->data.dice.sides = sides;
-	token->data.dice.add = add;
+	token->data.dice.sides  = sides;
+	token->data.dice.add    =  add;
 
 	printf("hi\n");
 	token_print(token);
