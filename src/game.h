@@ -57,26 +57,30 @@ struct GameData
 {
 	MonsterType *monsterTypesHead;
 	ItemType *itemTypesHead;
+	Monster *templates;
 };
 
 struct Item
 {
-	ItemType type;
+	ItemType *type;
 	Item *next;
 };
 
 struct Monster
 {
 	MonsterType *type;
+	int level;
 	int hp;
 	int regenTimer;
 	int poisonTimer;
 
-	Item *weapon;
-	Item *armor;
+	Item weapon;
+	Item armor;
 	Item *inventory;
 
 	uint undeadResurrectTimer;
+
+	Monster *next;
 };
 
 struct Game

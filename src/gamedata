@@ -20,6 +20,10 @@ MONSTER
 	skill undead
 
 ITEM
+	name 'pocao de cura'
+	hp 1d5+3
+
+ITEM
 	name 'espada barata'
 	damage 1d6
 
@@ -27,31 +31,13 @@ ITEM
 	name 'armadura de couro'
 	defense 5
 
-#MONSTER
-#	name 'skeleton'
-#	hp 10
-#	atk 2
-#	skill undead
+TEMPLATE
+	monster 'humano'
+	level 1
 
-#ITEM
-#	name 'sword'
-#	melee
-#	atk 6
+	weapon 'espada barata'
+	armor 'armadura de couro'
 
-#ITEM
-#	name 'armor'
-#	armor
-#	def 5
-
-#ITEM
-#	name 'health potion'
-#	hp 10
-#	consumable
-
-# TEMPLATE
-# 	race 'human'
-# 
-# 	item 'health potion'
-# 		count 2 to 5
-# 	end
-# 	item 'sword' end
+	item 'pocao de cura'
+	item 'pocao de cura'
+	item 'pocao de cura'

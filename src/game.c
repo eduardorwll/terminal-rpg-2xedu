@@ -53,6 +53,69 @@ int tryParseItemType(Tokenizer *tokenizer, ItemType *it)
 	return 1;
 }
 
+int tryParseTemplate(Tokenizer *tokenizer, Game *game, GameData *gamedata, Monster *template)
+{
+	String8 str = {0};
+	MonsterType *monsterType = NULL;
+	ItemType       *itemType = NULL;
+	Item               *item = NULL;
+
+	for (;;) {
+		if (tokenizer_getIntegerField(tokenizer, S8("level"), &template->level)) {
+		} else if (tokenizer_getStringField(tokenizer, S8("monster"), &str)) {
+			monsterType = gamedata->monsterTypesHead;
+			for (;;) {
+				assert(monsterType != NULL);
+				if (string8Eq(monsterType->name, str)) {
+					template->type = monsterType;
+					break;
+				}
+				monsterType = monsterType->next;
+			}
+		} else if (tokenizer_getStringField(tokenizer, S8("item"), &str)) {
+			itemType = gamedata->itemTypesHead;
+			for (;;) {
+				printf("finding %.*s\n", str.len, str.buf);
+				assert(itemType != NULL);
+				if (string8Eq(itemType->name, str)) {
+					item = template->inventory;
+					template->inventory = arenaPush(
+						&game->arena,
+						sizeof(Item),
+						8
+					);
+					template->inventory->next = item;
+					template->inventory->type = itemType;
+					break;
+				}
+				itemType = itemType->next;
+			}
+		} else if (tokenizer_getStringField(tokenizer, S8("weapon"), &str)) {
+			itemType = gamedata->itemTypesHead;
+			for (;;) {
+				assert(itemType != NULL);
+				if (string8Eq(itemType->name, str)) {
+					template->weapon.type = itemType;
+					break;
+				}
+				itemType = itemType->next;
+			}
+		} else if (tokenizer_getStringField(tokenizer, S8("armor"), &str)) {
+			itemType = gamedata->itemTypesHead;
+			for (;;) {
+				assert(itemType != NULL);
+				if (string8Eq(itemType->name, str)) {
+					template->armor.type = itemType;
+					break;
+				}
+				itemType = itemType->next;
+			}
+		} else {break;}
+	}
+
+	return 1;
+}
+
 void parseGameData(Game *game)
 {
 	GameData *gamedata = &game->gamedata;
@@ -61,7 +124,8 @@ void parseGameData(Game *game)
 	Token token = {0};
 	int success = 0;
 	MonsterType *monsterType = NULL;
-	ItemType *itemType       = NULL;
+	ItemType       *itemType = NULL;
+	Monster        *template = NULL;
 
 	if (readWholeFile("src/gamedata", &gamedataStr)) {
 		printf("error while reading src/gamedata\n");
@@ -99,6 +163,20 @@ void parseGameData(Game *game)
 				gamedata->itemTypesHead
 			);
 			gamedata->itemTypesHead->next = itemType;
+		} else if (token_isIdent(&token, S8("TEMPLATE"))) {
+			template = gamedata->templates;
+			gamedata->templates = arenaPush(
+				&game->arena,
+				sizeof(Monster),
+				8
+			);
+			success = tryParseTemplate(
+				&tokenizer,
+				game,
+				gamedata,
+				gamedata->templates
+			);
+			gamedata->templates->next = template;
 		} else {
 			printf("unrecognized token: "); 
 			token_print(&token);
