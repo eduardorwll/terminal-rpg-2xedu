@@ -191,6 +191,10 @@ void parseGameData(Game *game)
 	gamedataStr.buf = NULL;
 }
 
+int tryParsePlace(Tokenizer *tokenizer, Game *game, GameData *gamedata, Place *place)
+{
+}
+
 void printGameData(GameData *gamedata)
 {
 	MonsterType *monsterType = gamedata->monsterTypesHead;

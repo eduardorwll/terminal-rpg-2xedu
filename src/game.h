@@ -71,7 +71,9 @@ struct PlaceEntry
 		ItemType *itemType;
 		MonsterType *monsterType;
 		int gold;
-	}
+	} data;
+
+	PlaceEntry *next;
 };
 
 struct Place
@@ -80,7 +82,8 @@ struct Place
 	int chanceTotal;
 
 	PlaceEntry *entries;
-	uint entriesLen;
+
+	Place *next;
 };
 
 struct GameData
@@ -88,6 +91,7 @@ struct GameData
 	MonsterType *monsterTypesHead;
 	ItemType *itemTypesHead;
 	Monster *templates;
+	Place *places;
 };
 
 struct Item
