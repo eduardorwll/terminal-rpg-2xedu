@@ -13,6 +13,7 @@
 
 int main()
 {
+	int i = 0;
 
 	Game game = {0};
 	game.arena.capacity = 1024 * 16; /* 16kb should be enough for everyone ;) */
@@ -21,6 +22,19 @@ int main()
 	printGameData(&game.gamedata);
 
 	initRNG();
-
 	initMainMenu();
+
+	game.player.type = findMonsterType(&game.gamedata, S8("humano"));
+	game.enemiesLen = 3;
+	game.enemies[0].type = findMonsterType(&game.gamedata, S8("humano"));
+	game.enemies[0].hp = 20;
+	game.enemies[1].type = findMonsterType(&game.gamedata, S8("orc"));
+	game.enemies[1].hp = 20;
+	game.enemies[2].type = findMonsterType(&game.gamedata, S8("elfo"));
+	game.enemies[2].hp = 20;
+
+	while (true)
+	{
+		gameUpdate(&game);
+	}
 }
