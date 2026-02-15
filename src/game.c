@@ -62,6 +62,7 @@ int tryParseTemplate(Tokenizer *tokenizer, Game *game, GameData *gamedata, Monst
 
 	for (;;) {
 		if (tokenizer_getIntegerField(tokenizer, S8("level"), &template->level)) {
+		} else if (tokenizer_getIntegerField(tokenizer, S8("gold"),   &template->gold)) {
 		} else if (tokenizer_getStringField(tokenizer, S8("monster"), &str)) {
 			monsterType = gamedata->monsterTypesHead;
 			for (;;) {

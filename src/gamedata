@@ -27,8 +27,12 @@ MONSTER
 	name 'ciclope'
 	str 20    dex 10    vit 20    res 20
 
+MONSTER
+	name 'minotauro'
+	str 30    dex 30    vit 30    res 30
+
 # potions
-ITEM name 'pocao de cura maior'   hp 1d6+6
+ITEM name 'pocao de cura maior'   hp 1d6+6    
 ITEM name 'pocao de cura menor'   hp 1d3+3
 ITEM name 'pocao de regeneracao'  regen
 ITEM name 'pocao de veneno'       poison
@@ -49,6 +53,8 @@ ITEM name 'armadura de adamantio' defense 20
 TEMPLATE
 	monster 'humano'
 	level 1
+
+	gold 50
 
 	weapon 'espada barata'
 	armor 'armadura de couro'
@@ -79,7 +85,10 @@ TEMPLATE
 #
 #PLACE
 #	name 'labirinto'
-#	difficulty 8
+#   gold  50          20
+#   gold  100         20
+#	enemy 'minotauro' 1
+#	difficulty 10
 #
 #PLACE
 #	name 'profudezas'
