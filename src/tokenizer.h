@@ -3,19 +3,12 @@
 
 #include "arena.h"
 #include "string8.h"
+#include "rng.h"
 
 typedef struct Tokenizer Tokenizer;
 typedef struct Token Token;
 
-typedef struct Dice Dice;
-struct Dice
-{
-	int add;
-	int amount;
-	int sides;
-};
-
-typedef enum 
+typedef enum
 {
 	TokenType_Ident,
 	TokenType_String,
@@ -26,7 +19,8 @@ typedef enum
 struct Token
 {
 	TokenType type;
-	union {
+	union
+	{
 		int integer;
 		String8 str;
 		Dice dice;
