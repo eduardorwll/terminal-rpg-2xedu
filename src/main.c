@@ -9,14 +9,16 @@
 #include "arena.h"
 #include "util.h"
 #include "game.h"
+#include "rng.h"
 
 int main()
 {
+
 	Game game = {0};
 	game.arena.capacity = 1024 * 16; /* 16kb should be enough for everyone ;) */
 	game.arena.memory = malloc(game.arena.capacity);
 	parseGameData(&game);
 	printGameData(&game.gamedata);
 
-    return 0;
+	initRNG();
 }
