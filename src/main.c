@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "types.h"
-#include "string8.h"
-#include "arena.h"
-#include "util.h"
-#include "game.h"
-#include "rng.h"
+#include "../include/types.h"
+#include "../include/string8.h"
+#include "../include/arena.h"
+#include "../include/util.h"
+#include "../include/game.h"
+#include "../include/rng.h"
 
 int main()
 {
@@ -21,4 +21,6 @@ int main()
 	printGameData(&game.gamedata);
 
 	initRNG();
+
+	initMainMenu();
 }

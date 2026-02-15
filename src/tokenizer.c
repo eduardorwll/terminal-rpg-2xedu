@@ -1,4 +1,4 @@
-#include "tokenizer.h"
+#include "../include/tokenizer.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -11,41 +11,47 @@ typedef int (*tokenizer_Try)(Tokenizer *tokenizer, Token *token);
 /* @todo this is for debugging, remove later */
 void token_print(Token *token)
 {
-	switch (token->type) {
-		case TokenType_Ident: {
-			printf(
-				"IDENT \"%.*s\":%d\n",
-				token->data.str.len,
-				token->data.str.buf,
-				token->data.str.len
-			);
-		} break;
-		case TokenType_String: {
-			printf(
-				"STRING \"%.*s\":%d\n",
-				token->data.str.len,
-				token->data.str.buf,
-				token->data.str.len
-			);
-		} break;
-		case TokenType_Integer: {
-			printf(
-				"INTEGER %d\n",
-				token->data.integer
-			);
-		} break;
-		case TokenType_Dice: {
-			printf(
-				"DICE %dd%d+%d\n",
-				token->data.dice.amount,
-				token->data.dice.sides,
-				token->data.dice.add
-			);
-		} break;
-		default: {
-			printf("UNRECOGNIZED TOKEN\n");
-			assert(0);
-		};
+	switch (token->type)
+	{
+	case TokenType_Ident:
+	{
+		printf(
+			"IDENT \"%.*s\":%d\n",
+			token->data.str.len,
+			token->data.str.buf,
+			token->data.str.len);
+	}
+	break;
+	case TokenType_String:
+	{
+		printf(
+			"STRING \"%.*s\":%d\n",
+			token->data.str.len,
+			token->data.str.buf,
+			token->data.str.len);
+	}
+	break;
+	case TokenType_Integer:
+	{
+		printf(
+			"INTEGER %d\n",
+			token->data.integer);
+	}
+	break;
+	case TokenType_Dice:
+	{
+		printf(
+			"DICE %dd%d+%d\n",
+			token->data.dice.amount,
+			token->data.dice.sides,
+			token->data.dice.add);
+	}
+	break;
+	default:
+	{
+		printf("UNRECOGNIZED TOKEN\n");
+		assert(0);
+	};
 	}
 }
 
@@ -78,19 +84,28 @@ static int tokenizer_skipWhitespace(Tokenizer *tokenizer)
 	char c = 0;
 	bool inComment = false;
 
-	for (;;) {
-		if (tokenizer->index >= tokenizer->str.len) {
+	for (;;)
+	{
+		if (tokenizer->index >= tokenizer->str.len)
+		{
 			return 0;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
-		if (!inComment) {
-			if (c == '#') {
+		if (!inComment)
+		{
+			if (c == '#')
+			{
 				inComment = true;
-			} else if (!charIsWhitespace(c)) {
+			}
+			else if (!charIsWhitespace(c))
+			{
 				return 1;
 			}
-		} else {
-			if (c == '\n') {
+		}
+		else
+		{
+			if (c == '\n')
+			{
 				inComment = false;
 			}
 		}
@@ -104,26 +119,34 @@ static int tokenizer_tryParseInteger(Tokenizer *tokenizer, Token *token)
 	uint integer = 0;
 	uint len = 0;
 
-	for (;;) {
-		if (tokenizer->index >= tokenizer->str.len) {
+	for (;;)
+	{
+		if (tokenizer->index >= tokenizer->str.len)
+		{
 			break;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
-		if (charIsDigit(c)) {
+		if (charIsDigit(c))
+		{
 			len++;
 			integer = integer * 10 + c - '0';
 			tokenizer->index += 1;
-		} else {
+		}
+		else
+		{
 			break;
 		}
 	}
 
-	if (len > 0) {
+	if (len > 0)
+	{
 		token->type = TokenType_Integer;
 		token->data.integer = integer;
 
 		return 1;
-	} else {
+	}
+	else
+	{
 		return 0;
 	}
 }
@@ -136,53 +159,73 @@ static int tokenizer_tryParseDice(Tokenizer *tokenizer, Token *token)
 	uint add = 0;
 	bool foundOneDigit = false;
 
-	for (;;) {
-		if (tokenizer->index >= tokenizer->str.len) {
+	for (;;)
+	{
+		if (tokenizer->index >= tokenizer->str.len)
+		{
 			return 0;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
-		if (charIsDigit(c)) {
+		if (charIsDigit(c))
+		{
 			foundOneDigit = true;
 			amount = amount * 10 + c - '0';
 			tokenizer->index += 1;
-		} else {
-			if (foundOneDigit) {
+		}
+		else
+		{
+			if (foundOneDigit)
+			{
 				break;
-			} else {
+			}
+			else
+			{
 				return 0;
 			}
 		}
 	}
 
-	if (c != 'd') {
+	if (c != 'd')
+	{
 		return 0;
 	}
 	tokenizer->index += 1;
 
-	for (;;) {
-		if (tokenizer->index >= tokenizer->str.len) {
+	for (;;)
+	{
+		if (tokenizer->index >= tokenizer->str.len)
+		{
 			break;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
-		if (charIsDigit(c)) {
+		if (charIsDigit(c))
+		{
 			sides = sides * 10 + c - '0';
 			tokenizer->index += 1;
-		} else {
+		}
+		else
+		{
 			break;
 		}
 	}
 
-	if (c == '+') {
+	if (c == '+')
+	{
 		tokenizer->index += 1;
-		for (;;) {
-			if (tokenizer->index >= tokenizer->str.len) {
+		for (;;)
+		{
+			if (tokenizer->index >= tokenizer->str.len)
+			{
 				break;
 			}
 			c = tokenizer->str.buf[tokenizer->index];
-			if (charIsDigit(c)) {
+			if (charIsDigit(c))
+			{
 				add = add * 10 + c - '0';
 				tokenizer->index += 1;
-			} else {
+			}
+			else
+			{
 				break;
 			}
 		}
@@ -205,26 +248,34 @@ static int tokenizer_tryParseIdent(Tokenizer *tokenizer, Token *token)
 	uint len = 0;
 	const uint originalIndex = tokenizer->index;
 
-	for (;;) {
-		if (tokenizer->index >= tokenizer->str.len) {
+	for (;;)
+	{
+		if (tokenizer->index >= tokenizer->str.len)
+		{
 			break;
 		}
 		c = tokenizer->str.buf[tokenizer->index];
-		if (charIsAlpha(c)) {
+		if (charIsAlpha(c))
+		{
 			len += 1;
 			tokenizer->index += 1;
-		} else {
+		}
+		else
+		{
 			break;
 		}
 	}
 
-	if (len > 0) {
+	if (len > 0)
+	{
 		token->type = TokenType_Ident;
 		token->data.str.buf = &tokenizer->str.buf[originalIndex];
 		token->data.str.len = len;
 
 		return 1;
-	} else {
+	}
+	else
+	{
 		return 0;
 	}
 }
@@ -240,65 +291,101 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 
 	buffer = arenaPush(tokenizer->arena, 0, 1);
 
-	if (buffer == NULL) {
+	if (buffer == NULL)
+	{
 		fprintf(stderr, "out of memory error\n");
 		assert(0);
 	}
 
-	for (;;) {
-		if (tokenizer->index >= tokenizer->str.len) {
+	for (;;)
+	{
+		if (tokenizer->index >= tokenizer->str.len)
+		{
 			return 0;
 		}
 
 		c = tokenizer->str.buf[tokenizer->index];
 
-		if (!foundString) {
-			if (c == '"') {
+		if (!foundString)
+		{
+			if (c == '"')
+			{
 				isSingleQuotes = false;
 				foundString = true;
-			} if (c == '\'') {
+			}
+			if (c == '\'')
+			{
 				isSingleQuotes = true;
 				foundString = true;
-			} else {
+			}
+			else
+			{
 				return 0;
 			}
-		} else {
-			if (escape) {
-				if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
+		}
+		else
+		{
+			if (escape)
+			{
+				if (arenaPush(tokenizer->arena, 1, 1) == NULL)
+				{
 					fprintf(stderr, "out of memory error\n");
 					assert(0);
 				}
-				switch (c) {
-					case 'n': {
-						buffer[bufferLen++] = '\n';
-					} break;
-					case '\\': {
-						buffer[bufferLen++] = '\\';
-					} break;
-					case 't': {
-						buffer[bufferLen++] = '\t';
-					} break;
-					case '"': {
-						buffer[bufferLen++] = '"';
-					} break;
-					case '\'': {
-						buffer[bufferLen++] = '\'';
-					} break;
-					default: {
-						buffer[bufferLen++] = c;
-					} break;
+				switch (c)
+				{
+				case 'n':
+				{
+					buffer[bufferLen++] = '\n';
 				}
-			} else {
-				if (!isSingleQuotes && c == '"') {
+				break;
+				case '\\':
+				{
+					buffer[bufferLen++] = '\\';
+				}
+				break;
+				case 't':
+				{
+					buffer[bufferLen++] = '\t';
+				}
+				break;
+				case '"':
+				{
+					buffer[bufferLen++] = '"';
+				}
+				break;
+				case '\'':
+				{
+					buffer[bufferLen++] = '\'';
+				}
+				break;
+				default:
+				{
+					buffer[bufferLen++] = c;
+				}
+				break;
+				}
+			}
+			else
+			{
+				if (!isSingleQuotes && c == '"')
+				{
 					tokenizer->index += 1;
 					break;
-				} if (isSingleQuotes && c == '\'') {
+				}
+				if (isSingleQuotes && c == '\'')
+				{
 					tokenizer->index += 1;
 					break;
-				} else if (c == '\\') {
+				}
+				else if (c == '\\')
+				{
 					escape = true;
-				} else {
-					if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
+				}
+				else
+				{
+					if (arenaPush(tokenizer->arena, 1, 1) == NULL)
+					{
 						fprintf(stderr, "out of memory error\n");
 						assert(0);
 					}
@@ -310,17 +397,16 @@ static int tokenizer_tryParseString(Tokenizer *tokenizer, Token *token)
 
 		tokenizer->index += 1;
 	}
-	if (arenaPush(tokenizer->arena, 1, 1) == NULL) {
+	if (arenaPush(tokenizer->arena, 1, 1) == NULL)
+	{
 		fprintf(stderr, "out of memory error\n");
 		assert(0);
 	}
 	buffer[bufferLen] = '\0';
 
 	assert(
-		(char *)&tokenizer->arena->memory[tokenizer->arena->top - bufferLen - 1]
-		==
-		buffer
-	);
+		(char *)&tokenizer->arena->memory[tokenizer->arena->top - bufferLen - 1] ==
+		buffer);
 
 	token->type = TokenType_String;
 	token->data.str.buf = buffer;
@@ -345,24 +431,28 @@ int tokenizer_popToken(Tokenizer *tokenizer, Token *token)
 		tokenizer_tryParseDice,
 		tokenizer_tryParseIdent,
 		tokenizer_tryParseString,
-		tokenizer_tryParseInteger
-	};
+		tokenizer_tryParseInteger};
 
-	if (tokenizer->hasToken) {
+	if (tokenizer->hasToken)
+	{
 		*token = tokenizer->token;
 		tokenizer->hasToken = false;
 		return 1;
 	}
 
 	success = tokenizer_skipWhitespace(tokenizer);
-	if (!success) {
+	if (!success)
+	{
 		return 0;
 	}
 
-	if (tokenizer->index <= tokenizer->str.len) {
-		for (index = 0; index < sizeof(tryFuncs) / sizeof(*tryFuncs); index++) {
+	if (tokenizer->index <= tokenizer->str.len)
+	{
+		for (index = 0; index < sizeof(tryFuncs) / sizeof(*tryFuncs); index++)
+		{
 			oldTokenizerIndex = tokenizer->index;
-			if (tryFuncs[index](tokenizer, token) == 1) {
+			if (tryFuncs[index](tokenizer, token) == 1)
+			{
 				return 1;
 			}
 			tokenizer->index = oldTokenizerIndex;
@@ -376,12 +466,16 @@ int tokenizer_peekToken(Tokenizer *tokenizer, Token *token)
 {
 	int success = 0;
 
-	if (tokenizer->hasToken) {
+	if (tokenizer->hasToken)
+	{
 		*token = tokenizer->token;
 		return 1;
-	} else {
+	}
+	else
+	{
 		success = tokenizer_popToken(tokenizer, token);
-		if (success) {
+		if (success)
+		{
 			tokenizer->hasToken = true;
 			tokenizer->token = *token;
 		}
@@ -393,16 +487,20 @@ bool token_isIdent(Token *token, String8 str)
 {
 	uint i = 0;
 
-	if (token->type != TokenType_Ident) {
+	if (token->type != TokenType_Ident)
+	{
 		return false;
 	}
 
-	if (str.len != token->data.str.len) {
+	if (str.len != token->data.str.len)
+	{
 		return false;
 	}
 
-	for (; i < str.len; i++) {
-		if (str.buf[i] != token->data.str.buf[i]) {
+	for (; i < str.len; i++)
+	{
+		if (str.buf[i] != token->data.str.buf[i])
+		{
 			return false;
 		}
 	}
@@ -413,7 +511,8 @@ bool token_isIdent(Token *token, String8 str)
 bool tokenizer_popIdent(Tokenizer *tokenizer, Token *token)
 {
 	tokenizer_popToken(tokenizer, token);
-	if (token->type != TokenType_Ident) {
+	if (token->type != TokenType_Ident)
+	{
 		return false;
 	}
 	return true;
@@ -422,16 +521,19 @@ bool tokenizer_popIdent(Tokenizer *tokenizer, Token *token)
 bool tokenizer_peekIdent(Tokenizer *tokenizer, Token *token)
 {
 	tokenizer_peekToken(tokenizer, token);
-	if (token->type != TokenType_Ident) {
+	if (token->type != TokenType_Ident)
+	{
 		return false;
 	}
 	return true;
 }
 
-bool tokenizer_popInteger(Tokenizer *tokenizer, int *integer) {
+bool tokenizer_popInteger(Tokenizer *tokenizer, int *integer)
+{
 	Token token = {0};
 	tokenizer_popToken(tokenizer, &token);
-	if (token.type != TokenType_Integer) {
+	if (token.type != TokenType_Integer)
+	{
 		return false;
 	}
 	*integer = token.data.integer;
@@ -442,7 +544,8 @@ bool tokenizer_expectIdent(Tokenizer *tokenizer, String8 identStr)
 {
 	Token token = {0};
 	tokenizer_peekToken(tokenizer, &token);
-	if (token.type == TokenType_Ident && string8Eq(identStr, token.data.str)) {
+	if (token.type == TokenType_Ident && string8Eq(identStr, token.data.str))
+	{
 		tokenizer_advanceToken(tokenizer);
 		return true;
 	}
@@ -452,11 +555,13 @@ bool tokenizer_expectIdent(Tokenizer *tokenizer, String8 identStr)
 int tokenizer_getIntegerField(Tokenizer *tokenizer, String8 fieldName, int *integer)
 {
 	Token token = {0};
-	if (!tokenizer_peekIdent(tokenizer, &token)) {
+	if (!tokenizer_peekIdent(tokenizer, &token))
+	{
 		return 0;
 	}
 
-	if (token_isIdent(&token, fieldName)) {
+	if (token_isIdent(&token, fieldName))
+	{
 		tokenizer_advanceToken(tokenizer);
 		assert(tokenizer_popInteger(tokenizer, integer));
 		return 1;
@@ -469,11 +574,13 @@ int tokenizer_getIdentField(Tokenizer *tokenizer, String8 fieldName, String8 *id
 {
 	Token token = {0};
 	Token identToken = {0};
-	if (!tokenizer_peekIdent(tokenizer, &token)) {
+	if (!tokenizer_peekIdent(tokenizer, &token))
+	{
 		return 0;
 	}
 
-	if (token_isIdent(&token, fieldName)) {
+	if (token_isIdent(&token, fieldName))
+	{
 		tokenizer_advanceToken(tokenizer);
 		assert(tokenizer_popIdent(tokenizer, &identToken));
 		*ident = identToken.data.str;
@@ -488,7 +595,8 @@ bool tokenizer_popString(Tokenizer *tokenizer, String8 *string)
 {
 	Token token = {0};
 	tokenizer_popToken(tokenizer, &token);
-	if (token.type != TokenType_String) {
+	if (token.type != TokenType_String)
+	{
 		return false;
 	}
 
@@ -502,11 +610,13 @@ bool tokenizer_popString(Tokenizer *tokenizer, String8 *string)
 bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldName, String8 *str)
 {
 	Token token = {0};
-	if (!tokenizer_peekIdent(tokenizer, &token)) {
+	if (!tokenizer_peekIdent(tokenizer, &token))
+	{
 		return false;
 	}
 
-	if (token_isIdent(&token, fieldName)) {
+	if (token_isIdent(&token, fieldName))
+	{
 		tokenizer_advanceToken(tokenizer);
 		assert(tokenizer_popString(tokenizer, str));
 
@@ -516,10 +626,12 @@ bool tokenizer_getStringField(Tokenizer *tokenizer, String8 fieldName, String8 *
 	return false;
 }
 
-bool tokenizer_popDice(Tokenizer *tokenizer, Dice *dice) {
+bool tokenizer_popDice(Tokenizer *tokenizer, Dice *dice)
+{
 	Token token = {0};
 	tokenizer_popToken(tokenizer, &token);
-	if (token.type != TokenType_Dice) {
+	if (token.type != TokenType_Dice)
+	{
 		return false;
 	}
 	*dice = token.data.dice;
@@ -529,11 +641,13 @@ bool tokenizer_popDice(Tokenizer *tokenizer, Dice *dice) {
 int tokenizer_getDiceField(Tokenizer *tokenizer, String8 fieldName, Dice *dice)
 {
 	Token token = {0};
-	if (!tokenizer_peekIdent(tokenizer, &token)) {
+	if (!tokenizer_peekIdent(tokenizer, &token))
+	{
 		return 0;
 	}
 
-	if (token_isIdent(&token, fieldName)) {
+	if (token_isIdent(&token, fieldName))
+	{
 		tokenizer_advanceToken(tokenizer);
 		assert(tokenizer_popDice(tokenizer, dice));
 		return 1;

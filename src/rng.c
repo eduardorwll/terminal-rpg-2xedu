@@ -1,4 +1,4 @@
-#include "rng.h"
+#include "../include/rng.h"
 
 #include <time.h>
 #include <stdlib.h>

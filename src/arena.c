@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "arena.h"
+#include "../include/arena.h"
 
 void arenaMalloc(Arena *arena, uint capacity)
 {
@@ -23,7 +23,8 @@ void *arenaPush(Arena *arena, uint len, uint alignment)
 	assert(padding <= alignment);
 	assert(arena->top + padding + len < arena->capacity);
 
-	if (padding == alignment) {
+	if (padding == alignment)
+	{
 		padding = 0;
 	}
 
