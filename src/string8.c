@@ -1,4 +1,4 @@
-#include "string8.h"
+#include "../include/string8.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -11,16 +11,35 @@ String8 string8FromCstr(char *str)
 	return s8;
 }
 
+String8Array S8ArrayFromCstrArray(char *strArray[])
+{
+	int strArrayLen = sizeof(strArray) / sizeof(strArray[0]);
+
+	String8Array S8Array = {0};
+
+	int c = 0;
+	for (c; c < strArrayLen; c++)
+	{
+		S8Array.strings[c] = S8(strArray[c]);
+		S8Array.count++;
+	}
+
+	return S8Array;
+}
+
 bool string8Eq(String8 a, String8 b)
 {
 	uint i = 0;
 
-	if (a.len != b.len) {
+	if (a.len != b.len)
+	{
 		return false;
 	}
 
-	for (i = 0; i < a.len; i++) {
-		if (a.buf[i] != b.buf[i]) {
+	for (i = 0; i < a.len; i++)
+	{
+		if (a.buf[i] != b.buf[i])
+		{
 			return false;
 		}
 	}
