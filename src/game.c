@@ -287,7 +287,7 @@ void removeDeadEnemies(Game *game)
 	{
 		while (game->enemies[i].hp <= 0)
 		{
-			for (j = 0; j < game->enemiesLen - 1; j++)
+			for (j = i; j < game->enemiesLen - 1; j++)
 			{
 				game->enemies[j] = game->enemies[j + 1];
 			}
