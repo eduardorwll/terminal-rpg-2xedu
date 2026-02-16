@@ -21,7 +21,7 @@ int main(void)
 	printGameData(&game.gamedata);
 
 	initRNG();
-	initMainMenu();
+	initMainMenu(&game);
 
 	while (true)
 	{

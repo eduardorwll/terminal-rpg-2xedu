@@ -24,7 +24,7 @@ typedef struct String8Array String8Array;
 #define S8 string8FromCstr
 #define S8Arr S8ArrayFromCstrArray
 
-String8Array S8ArrayFromCstrArray(char *strArray[]);
+String8Array S8ArrayFromCstrArray(char *strArray[], int strArrayLen);
 String8 string8FromCstr(char *str);
 bool string8Eq(String8 a, String8 b);
 
