@@ -138,6 +138,7 @@ int tryParseItemType(Tokenizer *tokenizer, ItemType *it);
 void parseGameData(Game *game);
 void printGameData(GameData *gamedata);
 
+int gameUpdate(Game *game);
 MonsterType *findMonsterType(GameData *gamedata, String8 name);
 ItemType *findItemType(GameData *gamedata, String8 name);
 

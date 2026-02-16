@@ -446,8 +446,6 @@ void largeDelay()
 
 void removeDeadEnemies(Game *game)
 {
-	Monster *enemy = NULL;
-
 	uint i = 0, j = 0;
 	for (i = 0; i < game->enemiesLen; i++)
 	{
@@ -474,7 +472,6 @@ void gameBattle(Game *game)
 
 	uint itemIndex = 0;
 	Item *item = NULL;
-	ItemType *itemType = NULL;
 
 	printf("O que deseja fazer?\n");
 	printf("1. Atacar monstro\n");
@@ -588,13 +585,18 @@ void gameBattle(Game *game)
 	removeDeadEnemies(game);
 }
 
+void gameWalk(Game *game)
+{
+	(void) game;
+}
+
 int gameUpdate(Game *game)
 {
-	game->enemiesLen = 3;
+	game->place = &game->gamedata.places[0];
 	if (game->enemiesLen > 0) {
 		gameBattle(game);
 	} else {
-		assert(0);
+		gameWalk(game);
 	}
 	return 0;
 }

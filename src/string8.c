@@ -13,12 +13,13 @@ String8 string8FromCstr(char *str)
 
 String8Array S8ArrayFromCstrArray(char *strArray[])
 {
-	int strArrayLen = sizeof(strArray) / sizeof(strArray[0]);
+	/*int strArrayLen = sizeof(char **) / sizeof(strArray[0]);*/
+	int strArrayLen = 1;
 
 	String8Array S8Array = {0};
 
 	int c = 0;
-	for (c; c < strArrayLen; c++)
+	for (; c < strArrayLen; c++)
 	{
 		S8Array.strings[c] = S8(strArray[c]);
 		S8Array.count++;

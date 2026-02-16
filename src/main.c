@@ -10,11 +10,10 @@
 #include "../include/util.h"
 #include "../include/game.h"
 #include "../include/rng.h"
+#include "../include/menu.h"
 
-int main()
+int main(void)
 {
-	int i = 0;
-
 	Game game = {0};
 	game.arena.capacity = 1024 * 16; /* 16kb should be enough for everyone ;) */
 	game.arena.memory = malloc(game.arena.capacity);

@@ -7,7 +7,7 @@ void enumerateOptions(String8Array *options)
 {
     int i = 1;
 
-    for (i; i <= options->count; i++)
+    for (; i <= options->count; i++)
     {
         printf("\n%d. %.*s", i, options->strings[i - 1].len, options->strings[i - 1].buf);
     }
