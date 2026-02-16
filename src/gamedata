@@ -37,60 +37,13 @@ ITEM name 'pocao de cura menor'   hp 1d3+3
 ITEM name 'pocao de regeneracao'  regen
 ITEM name 'pocao de veneno'       poison
 
-# weapons
-ITEM name 'espada barata'         damage 1d6
-ITEM name 'espada de ferro'       damage 2d4
-ITEM name 'espada de titanio'     damage 4d4
-ITEM name 'espada de adamantio'   damage 4d4+3
-
-# armor
-ITEM name 'armadura de couro'     defense 5
-ITEM name 'armadura de ferro'     defense 10
-ITEM name 'armadura de mitril'    defense 15
-ITEM name 'armadura de adamantio' defense 20
-
-
 TEMPLATE
 	monster 'humano'
 	level 1
 
 	gold 50
 
-	weapon 'espada barata'
-	armor 'armadura de couro'
-
 	item 'pocao de cura menor'
 	item 'pocao de cura menor'
 	item 'pocao de cura menor'
 
-#PLACE
-#	name 'floresta'
-#	difficulty 1 # difficulty ranges from 1 to 10
-#	enemy 'duende'  10
-#	enemy 'elfo'    10
-#	enemy 'ciclope' 1
-#
-#PLACE
-#	name 'pantano'
-#	difficulty 5
-#	enemy 'elfo'    10
-#	enemy 'orc'     20
-#	enemy 'ciclope' 1
-#
-#PLACE
-#	name 'dungeon'
-#	difficulty 6
-#	enemy 'esqueleto' 4
-#	enemy 'slime'     4
-#
-#PLACE
-#	name 'labirinto'
-#   gold  50          20
-#   gold  100         20
-#	enemy 'minotauro' 1
-#	difficulty 10
-#
-#PLACE
-#	name 'profudezas'
-#	difficulty 10
-	

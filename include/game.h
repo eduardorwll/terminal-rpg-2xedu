@@ -10,21 +10,12 @@
 
 typedef struct ItemType ItemType;
 typedef struct MonsterType MonsterType;
-typedef struct Place Place;
-typedef struct PlaceEntry PlaceEntry;
 typedef struct GameData GameData;
 
 /* live data */
 typedef struct Item Item;
 typedef struct Monster Monster;
 typedef struct Game Game;
-
-typedef enum
-{
-	PlaceEntryType_Gold,
-	PlaceEntryType_Monster,
-	PlaceEntryType_Item
-} PlaceEntryType;
 
 typedef enum
 {
@@ -62,36 +53,11 @@ struct MonsterType
 	MonsterType *next;
 };
 
-struct PlaceEntry
-{
-	int chance;
-
-	PlaceEntryType type;
-	union {
-		ItemType *itemType;
-		MonsterType *monsterType;
-		int gold;
-	} data;
-
-	PlaceEntry *next;
-};
-
-struct Place
-{
-	String8 name;
-	int chanceTotal;
-
-	PlaceEntry *entries;
-
-	Place *next;
-};
-
 struct GameData
 {
 	MonsterType *monsterTypesHead;
 	ItemType *itemTypesHead;
 	Monster *templates;
-	Place *places;
 };
 
 struct Item
@@ -126,7 +92,6 @@ struct Game
 
 	String8 playername;
 	Monster player;
-	Place *place;
 
 	/* battle data */
 	Monster enemies[MAX_ENEMIES];

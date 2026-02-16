@@ -23,15 +23,6 @@ int main(void)
 	initRNG();
 	initMainMenu();
 
-	game.player.type = findMonsterType(&game.gamedata, S8("humano"));
-	game.enemiesLen = 3;
-	game.enemies[0].type = findMonsterType(&game.gamedata, S8("humano"));
-	game.enemies[0].hp = 20;
-	game.enemies[1].type = findMonsterType(&game.gamedata, S8("orc"));
-	game.enemies[1].hp = 20;
-	game.enemies[2].type = findMonsterType(&game.gamedata, S8("elfo"));
-	game.enemies[2].hp = 20;
-
 	while (true)
 	{
 		gameUpdate(&game);

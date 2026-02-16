@@ -209,65 +209,6 @@ int tryParseTemplate(Tokenizer *tokenizer, GameData *gamedata, Monster *template
 	return 1;
 }
 
-int tryParsePlace(Tokenizer *tokenizer, Game *game, GameData *gamedata, Place *place)
-{
-	PlaceEntry *entry = NULL;
-	String8 name = {0};
-
-	for (;;)
-	{
-		if (tokenizer_expectIdent(tokenizer, S8("gold")))
-		{
-			entry = arenaPush(&game->arena, sizeof(PlaceEntry), 1);
-			assert(entry != NULL);
-
-			entry->type = PlaceEntryType_Gold;
-			assert(tokenizer_popInteger(tokenizer, &entry->data.gold));
-			assert(tokenizer_popInteger(tokenizer, &entry->chance));
-
-			entry->next = place->entries;
-			place->entries = entry;
-		}
-		else if (tokenizer_expectIdent(tokenizer, S8("enemy")))
-		{
-			entry = arenaPush(&game->arena, sizeof(PlaceEntry), 1);
-			assert(entry != NULL);
-
-			entry->type = PlaceEntryType_Monster;
-			assert(tokenizer_popString(tokenizer, &name));
-			assert(tokenizer_popInteger(tokenizer, &entry->chance));
-
-			entry->data.monsterType = findMonsterType(gamedata, name);
-
-			entry->next = place->entries;
-			place->entries = entry;
-		}
-		else if (tokenizer_expectIdent(tokenizer, S8("item")))
-		{
-			entry = arenaPush(&game->arena, sizeof(PlaceEntry), 1);
-			assert(entry != NULL);
-
-			entry->type = PlaceEntryType_Item;
-			assert(tokenizer_popString(tokenizer, &name));
-			assert(tokenizer_popInteger(tokenizer, &entry->chance));
-
-			entry->data.itemType = findItemType(gamedata, name);
-
-			entry->next = place->entries;
-			place->entries = entry;
-		}
-		else if (tokenizer_getStringField(tokenizer, S8("name"), &place->name))
-		{
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	return 1;
-}
-
 void parseGameData(Game *game)
 {
 	GameData *gamedata = &game->gamedata;
@@ -278,7 +219,6 @@ void parseGameData(Game *game)
 	MonsterType *monsterType = NULL;
 	ItemType *itemType = NULL;
 	Monster *template = NULL;
-	Place *place = NULL;
 
 	if (readWholeFile("src/gamedata", &gamedataStr))
 	{
@@ -331,20 +271,6 @@ void parseGameData(Game *game)
 				gamedata,
 				gamedata->templates);
 			gamedata->templates->next = template;
-		}
-		else if (token_isIdent(&token, S8("PLACE")))
-		{
-			place = gamedata->places;
-			gamedata->places = arenaPush(
-				&game->arena,
-				sizeof(Place),
-				8);
-			success = tryParsePlace(
-				&tokenizer,
-				game,
-				gamedata,
-				gamedata->places);
-			gamedata->places->next = place;
 		}
 		else
 		{
@@ -585,18 +511,57 @@ void gameBattle(Game *game)
 	removeDeadEnemies(game);
 }
 
-void gameWalk(Game *game)
+int itemTypesLen(Game *game)
 {
-	(void) game;
+	int count = 0;
+	ItemType *itemType = game->gamedata.itemTypesHead;
+	while (itemType != NULL)
+	{
+		itemType = itemType->next;
+		count++;
+	}
+	return count;
 }
+
+
+ItemType *getItemType(Game *game, int index)
+{
+	int count = 0;
+	ItemType *itemType = game->gamedata.itemTypesHead;
+	while (itemType != NULL)
+	{
+		itemType = itemType->next;
+		if (count == index) {
+			return itemType;
+		}
+	}
+	assert(0);
+}
+
+/*
+void findItem(Game *game)
+{
+	int index = rand() % itemTypesLen(game);
+	ItemType *it = getItemType(game, index);
+}
+*/
 
 int gameUpdate(Game *game)
 {
-	game->place = &game->gamedata.places[0];
-	if (game->enemiesLen > 0) {
-		gameBattle(game);
-	} else {
-		gameWalk(game);
+
+	if (game->enemiesLen < 0) {
+		printf("nova batalha!\n");
+		game.player.type = findMonsterType(&game.gamedata, S8("humano"));
+		game.player.hp = 50;
+		game.enemiesLen = 3;
+		game.enemies[0].type = findMonsterType(&game.gamedata, S8("humano"));
+		game.enemies[0].hp = 20;
+		game.enemies[1].type = findMonsterType(&game.gamedata, S8("orc"));
+		game.enemies[1].hp = 20;
+		game.enemies[2].type = findMonsterType(&game.gamedata, S8("elfo"));
+		game.enemies[2].hp = 20;
 	}
+	gameBattle(game);
+
 	return 0;
 }
