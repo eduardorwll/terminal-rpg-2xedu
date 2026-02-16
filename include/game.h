@@ -124,6 +124,7 @@ struct Game
 	GameMode mode;
 	Arena arena; /* try to use this instead of malloc */
 
+	String8 playername;
 	Monster player;
 
 	/* battle data */
@@ -135,5 +136,8 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt);
 int tryParseItemType(Tokenizer *tokenizer, ItemType *it);
 void parseGameData(Game *game);
 void printGameData(GameData *gamedata);
+
+MonsterType *findMonsterType(GameData *gamedata, String8 name);
+ItemType *findItemType(GameData *gamedata, String8 name);
 
 #endif /* !defined(GAME_H) */

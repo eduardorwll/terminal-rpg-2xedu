@@ -444,14 +444,37 @@ void largeDelay()
 	usleep(1200000);
 }
 
+void removeDeadEnemies(Game *game)
+{
+	Monster *enemy = NULL;
+
+	uint i = 0, j = 0;
+	for (i = 0; i < game->enemiesLen; i++)
+	{
+		while (game->enemies[i].hp <= 0)
+		{
+			for (j = 0; j < game->enemiesLen - 1; j++)
+			{
+				game->enemies[j] = game->enemies[j + 1];
+			}
+			game->enemiesLen -= 1;
+		}
+	}
+}
+
 void gameBattle(Game *game)
 {
 	int option = 0;
 	int damage = 0;
 	bool getAttacked = true;
 	uint monsterIndex = 0;
+
 	Monster *enemy = NULL;
 	MonsterType *monsterType = NULL;
+
+	uint itemIndex = 0;
+	Item *item = NULL;
+	ItemType *itemType = NULL;
 
 	printf("O que deseja fazer?\n");
 	printf("1. Atacar monstro\n");
@@ -487,14 +510,32 @@ void gameBattle(Game *game)
 			smallDelay();
 			printf("o heroi ataca!\n");
 			smallDelay();
-			printf("o monstro perde %d de hp!\n\n", damage);
+			printf("o monstro perde %d de hp!\n", damage);
 			enemy->hp -= damage;
+			smallDelay();
+			printf("o monstro agora tem %d hp!\n\n", enemy->hp);
 			smallDelay();
 		}
 		break;
 		case 2:
 		{
-			assert(0);
+			printf("inventario:\n");
+			item = game->player.inventory;
+			itemIndex = 0;
+
+			while (item != NULL)
+			{
+				monsterType = enemy->type;
+				printf(
+					"[%d] %.*s\n",
+					itemIndex + 1,
+					item->type->name.len,
+					item->type->name.buf
+				);
+				item = item->next;
+				itemIndex += 1;
+				smallDelay();
+			}
 		}
 		break;
 		case 3:
@@ -544,6 +585,7 @@ void gameBattle(Game *game)
 			smallDelay();
 		}
 	}
+	removeDeadEnemies(game);
 }
 
 int gameUpdate(Game *game)
