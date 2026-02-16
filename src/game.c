@@ -281,13 +281,13 @@ void largeDelay()
 
 void removeDeadEnemies(Game *game)
 {
-	uint i = 0, j = 0;
+	int i = 0, j = 0;
 
-	for (i = 0; i < game->enemiesLen; i++)
+	for (i = 0; i < (int)game->enemiesLen; i++)
 	{
-		while (game->enemies[i].hp <= 0)
+		while (game->enemies[i].hp <= 0 && ((int)game->enemiesLen) > i)
 		{
-			for (j = i; j < game->enemiesLen - 1; j++)
+			for (j = i; j < ((int)game->enemiesLen) - 1; j++)
 			{
 				game->enemies[j] = game->enemies[j + 1];
 			}
@@ -535,7 +535,7 @@ void gameBattle(Game *game)
 			}
 
 			monsterType = enemy->type;
-			damage = monsterType->str * 2;
+			damage = MIN(1, monsterType->str / 2 + rand() % 3);
 			printf("o monstro '%.*s' ataca!\n", monsterType->name.len, monsterType->name.buf);
 			smallDelay();
 			printf("o heroi perde %d de hp!\n\n", damage);
