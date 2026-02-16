@@ -353,7 +353,7 @@ void gameBattle(Game *game)
 	printf("3. Jogar item\n");
 	printf("4. Fugir\n");
 	printf("5. Ver monstros\n");
-	option = getInputNumber(1, 4);
+	option = getInputNumber(1, 5);
 	switch (option)
 	{
 		case 1:
