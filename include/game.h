@@ -126,6 +126,7 @@ struct Game
 
 	String8 playername;
 	Monster player;
+	Place *place;
 
 	/* battle data */
 	Monster enemies[MAX_ENEMIES];
