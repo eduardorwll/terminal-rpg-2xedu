@@ -162,7 +162,7 @@ void parseGameData(Game *game)
 	MonsterType *monsterType = NULL;
 	ItemType *itemType = NULL;
 
-	if (readWholeFile("src/gamedata", &gamedataStr))
+	if (readWholeFile("gamedata", &gamedataStr))
 	{
 		printf("error while reading src/gamedata\n");
 		assert(0);
