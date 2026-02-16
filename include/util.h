@@ -3,7 +3,9 @@
 
 #include "string8.h"
 
+#define MAX(a, b) (((a) < (b)) ? (b) : (a))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 int readWholeFile(char *filepath, String8 *str);
-int writeToFile(String8 str, char *filepath);
 
 #endif /* !defined(UTIL_H) */

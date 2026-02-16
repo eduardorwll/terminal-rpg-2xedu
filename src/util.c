@@ -38,21 +38,3 @@ int readWholeFile(char *filepath, String8 *str)
 
 	return 0;
 }
-
-int writeToFile(String8 str, char *filepath)
-{
-	FILE *fp = fopen(filepath, "w");
-	if (fp == NULL)
-	{
-		return 1;
-	}
-
-	if (fwrite(str.buf, 1, str.len, fp) != str.len)
-	{
-		return 1;
-	}
-
-	fclose(fp);
-
-	return 0;
-}

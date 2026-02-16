@@ -1,5 +1,7 @@
 #include "../include/game.h"
 
+#include "../include/rng.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +10,6 @@
 int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 {
 	Token token = {0};
-	String8 str = {0};
 
 	for (;;)
 	{
@@ -20,21 +21,8 @@ int tryParseMonsterType(Tokenizer *tokenizer, MonsterType *mt)
 		if (tokenizer_getIntegerField(tokenizer, S8("str"), &mt->str))
 		{
 		}
-		else if (tokenizer_getIntegerField(tokenizer, S8("dex"), &mt->dex))
-		{
-		}
 		else if (tokenizer_getIntegerField(tokenizer, S8("vit"), &mt->vit))
 		{
-		}
-		else if (tokenizer_getIntegerField(tokenizer, S8("res"), &mt->res))
-		{
-		}
-		else if (tokenizer_getIdentField(tokenizer, S8("skill"), &str))
-		{
-			if (string8Eq(str, S8("undead")))
-			{
-				mt->isUndead = true;
-			}
 		}
 		else if (tokenizer_getStringField(tokenizer, S8("name"), &mt->name))
 		{
@@ -52,26 +40,15 @@ int tryParseItemType(Tokenizer *tokenizer, ItemType *it)
 {
 	for (;;)
 	{
-		if (tokenizer_getIntegerField(tokenizer, S8("defense"), &it->defense))
+		if (tokenizer_getDiceField(tokenizer, S8("hp"), &it->hp))
 		{
-			it->isArmor = true;
-		}
-		else if (tokenizer_getDiceField(tokenizer, S8("damage"), &it->damage))
-		{
-			it->isWeapon = true;
-		}
-		else if (tokenizer_getDiceField(tokenizer, S8("hp"), &it->hp))
-		{
-			it->isConsumable = true;
 		}
 		else if (tokenizer_expectIdent(tokenizer, S8("regen")))
 		{
-			it->isConsumable = true;
 			it->doesRegen = true;
 		}
 		else if (tokenizer_expectIdent(tokenizer, S8("poison")))
 		{
-			it->isConsumable = true;
 			it->doesPoison = true;
 		}
 		else if (tokenizer_getStringField(tokenizer, S8("name"), &it->name))
@@ -84,6 +61,34 @@ int tryParseItemType(Tokenizer *tokenizer, ItemType *it)
 	}
 
 	return 1;
+}
+
+MonsterType *getMonsterType(GameData *gamedata, int index)
+{
+	int count = 0;
+	MonsterType *monsterType = monsterType = gamedata->monsterTypesHead;
+
+	while (count != index)
+	{
+		monsterType = monsterType->next;
+		count++;
+	}
+
+	return monsterType;
+}
+
+int monsterTypeCount(GameData *gamedata)
+{
+	int count = 0;
+	MonsterType *monsterType = monsterType = gamedata->monsterTypesHead;
+
+	while (monsterType != NULL)
+	{
+		monsterType = monsterType->next;
+		count++;
+	}
+
+	return count;
 }
 
 MonsterType *findMonsterType(GameData *gamedata, String8 name)
@@ -147,68 +152,6 @@ void removeItemFromInventoryIndex(Monster *monster, int index)
 	}
 }
 
-/* @todo remember to free items from templates */
-int tryParseTemplate(Tokenizer *tokenizer, GameData *gamedata, Monster *template)
-{
-	String8 str = {0};
-	MonsterType *monsterType = NULL;
-	ItemType *itemType = NULL;
-
-	for (;;)
-	{
-		if (tokenizer_getIntegerField(tokenizer, S8("level"), &template->level))
-		{
-		}
-		else if (tokenizer_getIntegerField(tokenizer, S8("gold"), &template->gold))
-		{
-		}
-		else if (tokenizer_getStringField(tokenizer, S8("monster"), &str))
-		{
-			monsterType = findMonsterType(gamedata, str);
-			template->type = monsterType;
-		}
-		else if (tokenizer_getStringField(tokenizer, S8("item"), &str))
-		{
-			itemType = findItemType(gamedata, str);
-			addItemTypeToInventory(template, itemType);
-		}
-		else if (tokenizer_getStringField(tokenizer, S8("weapon"), &str))
-		{
-			itemType = gamedata->itemTypesHead;
-			for (;;)
-			{
-				assert(itemType != NULL);
-				if (string8Eq(itemType->name, str))
-				{
-					template->weapon.type = itemType;
-					break;
-				}
-				itemType = itemType->next;
-			}
-		}
-		else if (tokenizer_getStringField(tokenizer, S8("armor"), &str))
-		{
-			itemType = gamedata->itemTypesHead;
-			for (;;)
-			{
-				assert(itemType != NULL);
-				if (string8Eq(itemType->name, str))
-				{
-					template->armor.type = itemType;
-					break;
-				}
-				itemType = itemType->next;
-			}
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	return 1;
-}
-
 void parseGameData(Game *game)
 {
 	GameData *gamedata = &game->gamedata;
@@ -218,7 +161,6 @@ void parseGameData(Game *game)
 	int success = 0;
 	MonsterType *monsterType = NULL;
 	ItemType *itemType = NULL;
-	Monster *template = NULL;
 
 	if (readWholeFile("src/gamedata", &gamedataStr))
 	{
@@ -259,19 +201,6 @@ void parseGameData(Game *game)
 				gamedata->itemTypesHead);
 			gamedata->itemTypesHead->next = itemType;
 		}
-		else if (token_isIdent(&token, S8("TEMPLATE")))
-		{
-			template = gamedata->templates;
-			gamedata->templates = arenaPush(
-				&game->arena,
-				sizeof(Monster),
-				8);
-			success = tryParseTemplate(
-				&tokenizer,
-				gamedata,
-				gamedata->templates);
-			gamedata->templates->next = template;
-		}
 		else
 		{
 			printf("unrecognized token: ");
@@ -300,12 +229,7 @@ void printGameData(GameData *gamedata)
 			monsterType->name.len,
 			monsterType->name.buf);
 		printf("    str: %d\n", monsterType->str);
-		printf("    dex: %d\n", monsterType->dex);
 		printf("    vit: %d\n", monsterType->vit);
-		printf("    res: %d\n", monsterType->res);
-		printf(
-			"    isUndead: %s\n",
-			monsterType->isUndead ? "true" : "false");
 		monsterType = monsterType->next;
 	}
 
@@ -316,28 +240,13 @@ void printGameData(GameData *gamedata)
 			"    name: %.*s\n",
 			itemType->name.len,
 			itemType->name.buf);
-		if (itemType->isWeapon)
-		{
-			printf(
-				"    damage: %dd%d+%d\n",
-				itemType->damage.amount,
-				itemType->damage.sides,
-				itemType->damage.add);
-		}
-		if (itemType->isArmor)
-		{
-			printf("    defense: %d\n", itemType->defense);
-		}
-		if (itemType->isConsumable)
-		{
-			printf("    doesRegen: %s\n", itemType->doesRegen ? "true" : "false");
-			printf("    doesPoison: %s\n", itemType->doesPoison ? "true" : "false");
-			printf(
-				"    hp: %dd%d+%d\n",
-				itemType->hp.amount,
-				itemType->hp.sides,
-				itemType->hp.add);
-		}
+		printf("    doesRegen: %s\n", itemType->doesRegen ? "true" : "false");
+		printf("    doesPoison: %s\n", itemType->doesPoison ? "true" : "false");
+		printf(
+			"    hp: %dd%d+%d\n",
+			itemType->hp.amount,
+			itemType->hp.sides,
+			itemType->hp.add);
 		itemType = itemType->next;
 	}
 }
@@ -373,6 +282,7 @@ void largeDelay()
 void removeDeadEnemies(Game *game)
 {
 	uint i = 0, j = 0;
+
 	for (i = 0; i < game->enemiesLen; i++)
 	{
 		while (game->enemies[i].hp <= 0)
@@ -386,12 +296,50 @@ void removeDeadEnemies(Game *game)
 	}
 }
 
+int getMonsterItemCount(Monster *monster)
+{
+	int count = 0;
+	Item *item = monster->inventory;
+	while (item != NULL) {
+		item = item->next;
+		count++;
+	}
+	return count;
+}
+
+Item *getMonsterItem(Monster *monster, int index)
+{
+	int count = 0;
+	Item *item = monster->inventory;
+	while (count != index) {
+		item = item->next;
+		count++;
+	}
+	return item;
+}
+
+void itemAffectMonster(Item *item, Monster *monster)
+{
+	ItemType *itemType = item->type;
+	monster->hp += rollDice(itemType->hp);
+	if (itemType->doesRegen)
+	{
+		monster->regenTimer += 2 + rand() % 5;
+	}
+	if (itemType->doesPoison)
+	{
+		monster->poisonTimer += 2 + rand() % 5;
+	}
+}
+
 void gameBattle(Game *game)
 {
 	int option = 0;
 	int damage = 0;
 	bool getAttacked = true;
+	bool fled = false;
 	uint monsterIndex = 0;
+	int hpdiff = 0;
 
 	Monster *enemy = NULL;
 	MonsterType *monsterType = NULL;
@@ -402,8 +350,9 @@ void gameBattle(Game *game)
 	printf("O que deseja fazer?\n");
 	printf("1. Atacar monstro\n");
 	printf("2. Usar item\n");
-	printf("3. Fugir\n");
-	printf("4. Ver monstros\n");
+	printf("3. Jogar item\n");
+	printf("4. Fugir\n");
+	printf("5. Ver monstros\n");
 	option = getInputNumber(1, 4);
 	switch (option)
 	{
@@ -428,7 +377,7 @@ void gameBattle(Game *game)
 			enemy = &game->enemies[option];
 
 			monsterType = game->player.type;
-			damage = monsterType->str * 2;
+			damage = monsterType->str * 2 + rand() % 6;
 
 			smallDelay();
 			printf("o heroi ataca!\n");
@@ -442,13 +391,13 @@ void gameBattle(Game *game)
 		break;
 		case 2:
 		{
-			printf("inventario:\n");
+			printf("usar qual item?\n");
 			item = game->player.inventory;
 			itemIndex = 0;
 
+			smallDelay();
 			while (item != NULL)
 			{
-				monsterType = enemy->type;
 				printf(
 					"[%d] %.*s\n",
 					itemIndex + 1,
@@ -459,14 +408,69 @@ void gameBattle(Game *game)
 				itemIndex += 1;
 				smallDelay();
 			}
+			smallDelay();
+			option = getInputNumber(1, getMonsterItemCount(&game->player)) - 1;
+			itemAffectMonster(getMonsterItem(&game->player, option), &game->player);
+			removeItemFromInventoryIndex(&game->player, option);
 		}
 		break;
 		case 3:
 		{
-			assert(0);
+			printf("usar qual item?\n");
+			item = game->player.inventory;
+			itemIndex = 0;
+
+			smallDelay();
+			while (item != NULL)
+			{
+				printf(
+					"[%d] %.*s\n",
+					itemIndex + 1,
+					item->type->name.len,
+					item->type->name.buf
+				);
+				item = item->next;
+				itemIndex += 1;
+				smallDelay();
+			}
+			smallDelay();
+			option = getInputNumber(1, getMonsterItemCount(&game->player)) - 1;
+			printf("em qual monstro?\n");
+
+			for (monsterIndex = 0; monsterIndex < game->enemiesLen; monsterIndex++)
+			{
+				enemy = &game->enemies[monsterIndex];
+				monsterType = enemy->type;
+				printf(
+					"[%d] %.*s\n",
+					monsterIndex + 1,
+					monsterType->name.len,
+					monsterType->name.buf
+				);
+				smallDelay();
+			}
+
+			itemAffectMonster(
+				getMonsterItem(&game->player, option),
+				&game->enemies[getInputNumber(1, game->enemiesLen) - 1]
+			);
+			removeItemFromInventoryIndex(&game->player, option);
 		}
 		break;
 		case 4:
+		{
+			if (rand() % 10 < 8)
+			{
+				printf("voce conseguiu fugir!\n");
+				fled = true;
+				smallDelay();
+			} else {
+				printf("voce nao conseguiu fugir!\n");
+				smallDelay();
+			}
+		}
+		break;
+		case 5:
 		{
 			for (monsterIndex = 0; monsterIndex < game->enemiesLen; monsterIndex++)
 			{
@@ -488,9 +492,40 @@ void gameBattle(Game *game)
 	}
 
 	/* monster's turn */
-	if (getAttacked)
+	if (!fled && getAttacked)
 	{
-		largeDelay();
+		smallDelay();
+
+		/* loop for poison and regen */
+		for (monsterIndex = 0; monsterIndex < game->enemiesLen; monsterIndex++)
+		{
+			enemy = &game->enemies[monsterIndex];
+			if (enemy->poisonTimer > 0)
+			{
+				enemy->poisonTimer -= 1;
+
+				printf("'%.*s' esta envenenado!\n", enemy->type->name.len, enemy->type->name.buf);
+				smallDelay();
+
+				hpdiff = 1 + rand() % 3;
+				printf("'%.*s' perde %d hp!\n", enemy->type->name.len, enemy->type->name.buf, hpdiff);
+				enemy->hp -= hpdiff;
+			}
+			if (enemy->regenTimer > 0)
+			{
+				enemy->regenTimer -= 1;
+
+				printf("'%.*s' esta regenerando hp!\n", enemy->type->name.len, enemy->type->name.buf);
+				smallDelay();
+
+				hpdiff = 1 + rand() % 3;
+				printf("'%.*s' ganha %d hp!\n", enemy->type->name.len, enemy->type->name.buf, hpdiff);
+				enemy->hp += hpdiff;
+			}
+		}
+
+		removeDeadEnemies(game);
+
 		for (monsterIndex = 0; monsterIndex < game->enemiesLen; monsterIndex++)
 		{
 			enemy = &game->enemies[monsterIndex];
@@ -508,7 +543,14 @@ void gameBattle(Game *game)
 			smallDelay();
 		}
 	}
-	removeDeadEnemies(game);
+	if (fled)
+	{
+		game->enemiesLen = 0;
+	}
+	else
+	{
+		removeDeadEnemies(game);
+	}
 }
 
 int itemTypesLen(Game *game)
@@ -530,38 +572,98 @@ ItemType *getItemType(Game *game, int index)
 	ItemType *itemType = game->gamedata.itemTypesHead;
 	while (itemType != NULL)
 	{
-		itemType = itemType->next;
 		if (count == index) {
 			return itemType;
 		}
+		count++;
+		itemType = itemType->next;
 	}
 	assert(0);
 }
 
-/*
 void findItem(Game *game)
 {
 	int index = rand() % itemTypesLen(game);
 	ItemType *it = getItemType(game, index);
+
+	printf("voce achou um item! '%.*s'!\n", it->name.len, it->name.buf);
+	addItemTypeToInventory(&game->player, it);
 }
-*/
+
+void writeToHighscore(Game *game)
+{
+	FILE *fp = fopen("highscore", "a");
+	if (fp == NULL)
+	{
+		printf("nao foi possivel escrever ao highscore\n");
+	}
+	fprintf(fp, "%d\t\t%.*s\n", game->score, game->playername.len, game->playername.buf);
+	fclose(fp);
+	printf("escrito no arquivo highscore!\n");
+}
+
+void removeItems(Game *game)
+{
+	Item *item = game->player.inventory;
+	Item *prev = NULL;
+	while (item != NULL)
+	{
+		if (prev != NULL)
+		{
+			free(prev);
+		}
+		prev = item;
+		item = item->next;
+	}
+	if (item != NULL)
+	{
+		free(item);
+	}
+}
 
 int gameUpdate(Game *game)
 {
+	uint i = 0;
+	int option = 0;
+	int mCount = monsterTypeCount(&game->gamedata);
 
 	if (game->enemiesLen == 0) {
-		printf("nova batalha!\n");
-		game->player.type = findMonsterType(&game->gamedata, S8("humano"));
-		game->player.hp = 50;
-		game->enemiesLen = 3;
-		game->enemies[0].type = findMonsterType(&game->gamedata, S8("humano"));
-		game->enemies[0].hp = 20;
-		game->enemies[1].type = findMonsterType(&game->gamedata, S8("orc"));
-		game->enemies[1].hp = 20;
-		game->enemies[2].type = findMonsterType(&game->gamedata, S8("elfo"));
-		game->enemies[2].hp = 20;
+		findItem(game);
+		game->score += 1;
+
+		printf("novos inimigos aparecem!\n");
+		game->enemiesLen = rand() % 6;
+
+		for (i = 0; i < game->enemiesLen; i++)
+		{
+			game->enemies[i].type = getMonsterType(&game->gamedata, rand() % mCount);
+			game->enemies[i].hp = game->enemies[i].type->vit;
+		}
 	}
+
+	if (game->player.hp < game->player.type->vit)
+	{
+		game->player.hp = MIN(game->player.hp + 10, game->player.type->vit);
+	}
+	else
+	{
+		game->player.hp -= 1;
+	}
+
+	if (game->player.hp <= 0)
+	{
+		removeItems(game);
+		printf("voce morreu!\n");
+		return 1;
+	}
+
 	gameBattle(game);
+
+	printf("voce deseja sair do jogo?\n1. continuar jogando\n2. sair\n");
+	option = getInputNumber(1, 2);
+	if (option == 2) {
+		return 1;
+	}
 
 	return 0;
 }

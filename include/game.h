@@ -27,16 +27,10 @@ struct ItemType
 {
 	String8 name;
 
-	bool isConsumable;
-	bool isWeapon;
-	bool isArmor;
-
 	bool doesRegen;
 	bool doesPoison;
 
 	Dice hp;
-	Dice damage;
-	int defense;
 
 	ItemType *next;
 };
@@ -45,11 +39,8 @@ struct MonsterType
 {
 	String8 name;
 	int str;
-	int dex;
 	int vit;
-	int res;
 
-	uint isUndead : 1;
 	MonsterType *next;
 };
 
@@ -69,19 +60,13 @@ struct Item
 struct Monster
 {
 	MonsterType *type;
-	int level;
 	int hp;
 	int regenTimer;
 	int poisonTimer;
-	int gold;
 
 	Item weapon;
 	Item armor;
 	Item *inventory;
-
-	uint undeadResurrectTimer;
-
-	Monster *next;
 };
 
 struct Game
@@ -89,6 +74,7 @@ struct Game
 	GameData gamedata;
 	GameMode mode;
 	Arena arena; /* try to use this instead of malloc */
+	int score;
 
 	String8 playername;
 	Monster player;
@@ -106,5 +92,6 @@ void printGameData(GameData *gamedata);
 int gameUpdate(Game *game);
 MonsterType *findMonsterType(GameData *gamedata, String8 name);
 ItemType *findItemType(GameData *gamedata, String8 name);
+void writeToHighscore(Game *game);
 
 #endif /* !defined(GAME_H) */

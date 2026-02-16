@@ -1,49 +1,37 @@
 MONSTER
 	name 'humano'
-	str 5    dex 10   vit 5    res 5
+	str 5    vit 5
 
 MONSTER
 	name 'elfo'
-	str 5    dex 12   vit 10   res 5
+	str 5    vit 10
 
 MONSTER
 	name 'duende'
-	str 5    dex 5    vit 10   res 5
+	str 5    vit 10
 
 MONSTER
 	name 'orc'
-	str 10   dex 5    vit 10   res 10
+	str 10   vit 10
 
 MONSTER
 	name 'esqueleto'
-	str 3    dex 3    vit 3    res 3
-	skill undead
+	str 3    vit 3
 
 MONSTER
 	name 'slime'
-	str 2    dex 2    vit 8    res 2
+	str 2    vit 8
 
 MONSTER
 	name 'ciclope'
-	str 20    dex 10    vit 20    res 20
+	str 20    vit 20
 
 MONSTER
 	name 'minotauro'
-	str 30    dex 30    vit 30    res 30
+	str 30    vit 30
 
 # potions
 ITEM name 'pocao de cura maior'   hp 1d6+6    
 ITEM name 'pocao de cura menor'   hp 1d3+3
 ITEM name 'pocao de regeneracao'  regen
 ITEM name 'pocao de veneno'       poison
-
-TEMPLATE
-	monster 'humano'
-	level 1
-
-	gold 50
-
-	item 'pocao de cura menor'
-	item 'pocao de cura menor'
-	item 'pocao de cura menor'
-
